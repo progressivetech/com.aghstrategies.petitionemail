@@ -45,7 +45,7 @@ function civicrm_petition_email_civicrm_buildForm( $formName, &$form ) {
   $form->add('text', 'recipient_name', ts('Recipient\'s Name'));
   $form->add('text', 'recipient', ts('Recipient\'s Email'));
   $validcustomgroups = array();
-  $surveycustomgroups = civicrm_api("CustomGroup","get", array (version=>'3','sequential' =>'1', 'extends' =>'Activity'));
+  $surveycustomgroups = civicrm_api("CustomGroup","get", array ('version' => '3','sequential' => '1', 'extends' => 'Activity'));
   if (is_array($surveycustomgroups['values']) && !$surveycustomgroups['is_error']) {
     foreach ($surveycustomgroups['values'] as $group) {
       if (is_array($group['extends_entity_column_value'])) {
@@ -55,7 +55,7 @@ function civicrm_petition_email_civicrm_buildForm( $formName, &$form ) {
       $validcustomgroups[] = $group['id'];
     }
   }
-  $textareas = civicrm_api("CustomField","get", array(version=>'3','sequential' =>'1', 'html_type' =>'TextArea'));
+  $textareas = civicrm_api("CustomField","get", array('version' => '3','sequential' =>'1', 'html_type' =>'TextArea'));
   if (is_array($textareas['values']) && $textareas['count'] > 0 && !$textareas['is_error']) {
     $textarealist = array('' => '- Select -');
     foreach ($textareas['values'] as $value) {
@@ -180,7 +180,7 @@ function civicrm_petition_email_civicrm_postProcess( $formName, &$form ) {
     require_once 'api/api.php';
     $survey_id = $form->getVar('_surveyId');
     if (!$survey_id) {  // Ugly hack because the form doesn't return the id
-      $surveys = civicrm_api("Survey","get", array(version=>'3', 'sequential' =>'1', 'title' =>$form->_submitValues['title']));
+      $surveys = civicrm_api("Survey","get", array('version' => '3', 'sequential' =>'1', 'title' =>$form->_submitValues['title']));
       if (is_array($surveys['values'])) {
         foreach($surveys['values'] as $survey) {
           if ($lastmoddate > strtotime($survey['last_modified_date'])) { continue; }
@@ -237,11 +237,11 @@ function civicrm_petition_email_civicrm_post( $op, $objectName, $objectId, &$obj
         $recipient = $petitioninfo['recipient_email'];
         $params = array( 'subject' => $petitioninfo['subject'] );
         $user_message = 'custom_' . $petitioninfo['message_field'];
-        $from = civicrm_api("Contact","getsingle", array (version=>'3','sequential' =>'1', 'id' =>$objectRef->source_contact_id));
+        $from = civicrm_api("Contact","getsingle", array ('version' => '3','sequential' =>'1', 'id' =>$objectRef->source_contact_id));
         if ($from['email']) {
           $fromline = $from['display_name'] . ' <' . $from['email'] . '>';
         } else {
-          $domain = civicrm_api("Domain","get", array (version=>'3','sequential' =>'1'));
+          $domain = civicrm_api("Domain","get", array ('version' => '3','sequential' =>'1'));
           if ($domain['is_error'] || !is_array($domain['values'])) { return; }
           $fromline = '"' . $from['display_name'] . '"' . ' <' . $domain['values']['from_email'] . '>';
         }
@@ -267,9 +267,9 @@ function civicrm_petition_email_get_petition_type() {
   $petitiontype = variable_get('civicrm_petition_email_petitiontype', false);
   
   if (!$petitiontype) { // Go figure out and set the activity type id
-    $acttypegroup = civicrm_api("OptionGroup","getsingle", array(version=>'3','sequential' =>'1', 'name' =>'activity_type'));
+    $acttypegroup = civicrm_api("OptionGroup","getsingle", array('version' => '3','sequential' =>'1', 'name' =>'activity_type'));
     if ($acttypegroup['id'] && !$acttypegroup['is_error']) {
-      $acttype = civicrm_api("OptionValue","getsingle", array (version=>'3','sequential' =>'1', 'option_group_id' =>$acttypegroup['id'], 'name' =>'Petition'));
+      $acttype = civicrm_api("OptionValue","getsingle", array ('version' => '3','sequential' =>'1', 'option_group_id' =>$acttypegroup['id'], 'name' =>'Petition'));
       if ($acttype['id'] && !$acttype['is_error']) {
         $petitiontype = $acttype['value'];
         variable_set('civicrm_petition_email_petitiontype', $acttype['value']);
