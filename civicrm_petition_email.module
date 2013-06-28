@@ -9,7 +9,7 @@ function civicrm_petition_email_civicrm_buildForm( $formName, &$form ) {
   if ($formName == 'CRM_Campaign_Form_Petition_Signature') {  
     $survey_id = $form->getVar('_surveyId');
     if ($survey_id) {
-      $petitionemailval = db_query('SELECT petition_id, recipient_email, recipient_name, default_message, message_field, subject FROM {civicrm_petition_email} WHERE petition_id = %d', $survey_id);
+      $petitionemailval = db_query('SELECT petition_id, recipient_email, recipient_name, default_message, message_field, subject FROM {civicrm_petition_email} WHERE petition_id = :survey_id', array(':survey_id' => $survey_id));
       while ($petitioninfo = db_fetch_array($petitionemailval)) {
         $defaults = $form->getVar('_defaults');
         $messagefield = 'custom_' . $petitioninfo['message_field'];
@@ -28,7 +28,7 @@ function civicrm_petition_email_civicrm_buildForm( $formName, &$form ) {
   if ($formName != 'CRM_Campaign_Form_Petition') { return; }
   $survey_id = $form->getVar('_surveyId');
   if ($survey_id) {
-    $petitionemailval = db_query('SELECT petition_id, recipient_email, recipient_name, default_message, message_field, subject FROM {civicrm_petition_email} WHERE petition_id = %d', $survey_id);
+    $petitionemailval = db_query('SELECT petition_id, recipient_email, recipient_name, default_message, message_field, subject FROM {civicrm_petition_email} WHERE petition_id = :survey_id', array(':survey_id' => $survey_id));
     while ($petitioninfo = db_fetch_array($petitionemailval)) {
       $form->_defaultValues['email_petition'] = 1;
       $form->_defaultValues['recipient_name'] = $petitioninfo['recipient_name'];
@@ -192,26 +192,29 @@ function civicrm_petition_email_civicrm_postProcess( $formName, &$form ) {
       return;
     }
 
-    $checkexisting = db_query("SELECT count(*) FROM {civicrm_petition_email} WHERE petition_id = %d", $survey_id);
-    if (db_result($checkexisting) == 0) {
+    $checkexisting = db_query("SELECT count(*) AS count FROM {civicrm_petition_email} WHERE petition_id = :survey_id", array(':survey_id' => $survey_id));
+    $row = $checkexisting->fetchAssoc();
+    if ($row['count']== 0) {
       $insert = db_query(
-        "INSERT INTO {civicrm_petition_email} (petition_id, recipient_email, recipient_name, default_message, message_field, subject) VALUES ( %d, '%s', '%s', '%s', %d, '%s' )", 
-        $survey_id, 
-        $form->_submitValues['recipient'], 
-        $form->_submitValues['recipient_name'], 
-        $form->_submitValues['default_message'],
-        $form->_submitValues['user_message'],
-        $form->_submitValues['subjectline']
+        "INSERT INTO {civicrm_petition_email} (petition_id, recipient_email, recipient_name, default_message, message_field, subject) VALUES ( :survey_id, :recipient, :recipient_name, :default_message, :user_message, :subjectline )", array(
+         ':survey_id' => $survey_id, 
+          ':recipient' =>  $form->_submitValues['recipient'], 
+          ':recipient_name' => $form->_submitValues['recipient_name'], 
+          ':default_message' =>  $form->_submitValues['default_message'],
+          ':user_message' =>  intval($form->_submitValues['user_message']),
+          ':subjectline' =>  $form->_submitValues['subjectline']
+        )
       );
     } else {
       $insert = db_query(
-        "UPDATE {civicrm_petition_email} SET recipient_email = '%s', recipient_name = '%s', default_message = '%s', message_field = %d, subject = '%s' WHERE petition_id = %d", 
-        $form->_submitValues['recipient'], 
-        $form->_submitValues['recipient_name'], 
-        $form->_submitValues['default_message'],
-        $form->_submitValues['user_message'],
-        $form->_submitValues['subjectline'],
-        $survey_id
+        "UPDATE {civicrm_petition_email} SET recipient_email = :recipient, recipient_name = :recipient_name, default_message = :default_message, message_field = :message_field, subject = :subject WHERE petition_id = :survey_id", array(
+         ':recipient' =>  $form->_submitValues['recipient'], 
+         ':recipient_name' => $form->_submitValues['recipient_name'], 
+         ':default_message' => $form->_submitValues['default_message'],
+         ':message_field' => $form->_submitValues['user_message'],
+         ':subject' => $form->_submitValues['subjectline'],
+         ':survey_id' => $survey_id
+       )
       );
     }
     if (!$insert) {
@@ -227,7 +230,7 @@ function civicrm_petition_email_civicrm_post( $op, $objectName, $objectId, &$obj
     
     if ($objectRef->activity_type_id == $petitiontype) {
       global $language;  
-      $petitionemailval = db_query("SELECT petition_id, recipient_email, recipient_name, default_message, message_field, subject FROM {civicrm_petition_email} WHERE petition_id = %d", $objectRef->source_record_id);
+      $petitionemailval = db_query("SELECT petition_id, recipient_email, recipient_name, default_message, message_field, subject FROM {civicrm_petition_email} WHERE petition_id = :survey_id", array(':survey_id' => $objectRef->source_record_id));
       while ($petitioninfo = db_fetch_array($petitionemailval)) {
         $recipient_name = $petitioninfo['recipient_name'];
         $recipient = $petitioninfo['recipient_email'];
