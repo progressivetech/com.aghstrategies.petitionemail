@@ -1,6 +1,6 @@
 name = CiviCRM Petition Email
 description = Email petition signatures to a selected recipient
-core = 6.x
-version = 6.x-dev
+core = 7.x
+version = 7.x-dev
 dependencies[] = civicrm
 package = CiviCRM
