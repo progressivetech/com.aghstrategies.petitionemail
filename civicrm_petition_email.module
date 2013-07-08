@@ -10,15 +10,15 @@ function civicrm_petition_email_civicrm_buildForm( $formName, &$form ) {
     $survey_id = $form->getVar('_surveyId');
     if ($survey_id) {
       $petitionemailval = db_query('SELECT petition_id, recipient_email, recipient_name, default_message, message_field, subject FROM {civicrm_petition_email} WHERE petition_id = :survey_id', array(':survey_id' => $survey_id));
-      while ($petitioninfo = db_fetch_array($petitionemailval)) {
+      foreach ($petitionemailval as $petitioninfo ) {
         $defaults = $form->getVar('_defaults');
-        $messagefield = 'custom_' . $petitioninfo['message_field'];
+        $messagefield = 'custom_' . $petitioninfo->message_field;
         foreach ($form->_elements as $element) {
           if ($element->_attributes['name'] == $messagefield) { 
-            $element->_value = $petitioninfo['default_message']; 
+            $element->_value = $petitioninfo->default_message; 
           }
         }
-        $defaults[$messagefield] = $form->_defaultValues[$messagefield] = $petitioninfo['default_message'];
+        $defaults[$messagefield] = $form->_defaultValues[$messagefield] = $petitioninfo->default_message;
         $form->setVar('_defaults',$defaults);
         break;
       }
@@ -29,13 +29,13 @@ function civicrm_petition_email_civicrm_buildForm( $formName, &$form ) {
   $survey_id = $form->getVar('_surveyId');
   if ($survey_id) {
     $petitionemailval = db_query('SELECT petition_id, recipient_email, recipient_name, default_message, message_field, subject FROM {civicrm_petition_email} WHERE petition_id = :survey_id', array(':survey_id' => $survey_id));
-    while ($petitioninfo = db_fetch_array($petitionemailval)) {
+    foreach ($petitionemailval as $petitioninfo) {
       $form->_defaultValues['email_petition'] = 1;
-      $form->_defaultValues['recipient_name'] = $petitioninfo['recipient_name'];
-      $form->_defaultValues['recipient'] = $petitioninfo['recipient_email'];
-      $form->_defaultValues['default_message'] = $petitioninfo['default_message'];
-      $form->_defaultValues['user_message'] = $petitioninfo['message_field'];
-      $form->_defaultValues['subjectline'] = $petitioninfo['subject'];
+      $form->_defaultValues['recipient_name'] = $petitioninfo->recipient_name;
+      $form->_defaultValues['recipient'] = $petitioninfo->recipient_email;
+      $form->_defaultValues['default_message'] = $petitioninfo->default_message;
+      $form->_defaultValues['user_message'] = $petitioninfo->message_field;
+      $form->_defaultValues['subjectline'] = $petitioninfo->subject;
       break;
     }
   }
@@ -46,7 +46,7 @@ function civicrm_petition_email_civicrm_buildForm( $formName, &$form ) {
   $surveycustomgroups = civicrm_api("CustomGroup","get", array ('version' => '3','sequential' => '1', 'extends' => 'Activity'));
   if (is_array($surveycustomgroups['values']) && !$surveycustomgroups['is_error']) {
     foreach ($surveycustomgroups['values'] as $group) {
-      if (is_array($group['extends_entity_column_value'])) {
+      if (array_key_exists('extends_entity_column_value', $group) && is_array($group['extends_entity_column_value'])) {
         $petitiontype = civicrm_petition_email_get_petition_type();
         if (!in_array($petitiontype, $group['extends_entity_column_value'])) { continue; }
       }
@@ -177,6 +177,7 @@ function civicrm_petition_email_civicrm_postProcess( $formName, &$form ) {
   if ( $form->_submitValues['email_petition'] == 1 ) {
     require_once 'api/api.php';
     $survey_id = $form->getVar('_surveyId');
+    $lastmoddate = 0;
     if (!$survey_id) {  // Ugly hack because the form doesn't return the id
       $surveys = civicrm_api("Survey","get", array('version' => '3', 'sequential' =>'1', 'title' =>$form->_submitValues['title']));
       if (is_array($surveys['values'])) {
@@ -231,11 +232,11 @@ function civicrm_petition_email_civicrm_post( $op, $objectName, $objectId, &$obj
     if ($objectRef->activity_type_id == $petitiontype) {
       global $language;  
       $petitionemailval = db_query("SELECT petition_id, recipient_email, recipient_name, default_message, message_field, subject FROM {civicrm_petition_email} WHERE petition_id = :survey_id", array(':survey_id' => $objectRef->source_record_id));
-      while ($petitioninfo = db_fetch_array($petitionemailval)) {
-        $recipient_name = $petitioninfo['recipient_name'];
-        $recipient = $petitioninfo['recipient_email'];
-        $params = array( 'subject' => $petitioninfo['subject'] );
-        $user_message = 'custom_' . $petitioninfo['message_field'];
+      foreach ($petitionemailval as $petitioninfo) {
+        $recipient_name = $petitioninfo->recipient_name;
+        $recipient = $petitioninfo->recipient_email;
+        $params = array( 'subject' => $petitioninfo->subject );
+        $user_message = 'custom_' . $petitioninfo->message_field;
         $from = civicrm_api("Contact","getsingle", array ('version' => '3','sequential' =>'1', 'id' =>$objectRef->source_contact_id));
         if ($from['email']) {
           $fromline = $from['display_name'] . ' <' . $from['email'] . '>';
@@ -244,7 +245,7 @@ function civicrm_petition_email_civicrm_post( $op, $objectName, $objectId, &$obj
           if ($domain['is_error'] || !is_array($domain['values'])) { return; }
           $fromline = '"' . $from['display_name'] . '"' . ' <' . $domain['values']['from_email'] . '>';
         }
-        $params['message'] = ( $objectRef->$user_message ) ? $objectRef->$user_message : $petitioninfo['default_message'];
+        $params['message'] = ( $objectRef->$user_message ) ? $objectRef->$user_message : $petitioninfo->default_message;
         $success = drupal_mail('civicrm_petition_email', 'signature', $recipient_name . ' <' . $recipient . '>', $language, $params, $fromline);
         if($success['result']) {
           CRM_Core_Session::setStatus( ts('Message sent successfully to') . " $recipient_name" );
