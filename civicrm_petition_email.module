@@ -43,29 +43,55 @@ function civicrm_petition_email_civicrm_buildForm( $formName, &$form ) {
   $form->add('text', 'recipient_name', ts('Recipient\'s Name'));
   $form->add('text', 'recipient', ts('Recipient\'s Email'));
   $validcustomgroups = array();
-  $surveycustomgroups = civicrm_api("CustomGroup","get", array ('version' => '3','sequential' => '1', 'extends' => 'Activity'));
-  if (is_array($surveycustomgroups['values']) && !$surveycustomgroups['is_error']) {
-    foreach ($surveycustomgroups['values'] as $group) {
-      if (array_key_exists('extends_entity_column_value', $group) && is_array($group['extends_entity_column_value'])) {
-        $petitiontype = civicrm_petition_email_get_petition_type();
-        if (!in_array($petitiontype, $group['extends_entity_column_value'])) { continue; }
+
+  // Get the Profiles in use by this petition so we can find out
+  // if there are any potential fields for an extra message to the
+  // petition target.
+  $params = array('version' => '3', 'module' => 'CiviCampaign', 'entity_table' => 'civicrm_survey', 'entity_id' => $survey_id );
+  $join_results = civicrm_api('UFJoin','get', $params);
+  $custom_fields = array();
+  if ($join_results['is_error'] == 0) {
+    foreach ($join_results['values'] as $join_value) {
+      $uf_group_id = $join_value['uf_group_id'];
+
+      // Now get all fields in this profile
+      $params = array('version' => 3, 'uf_group_id' => $uf_group_id);
+      $field_results = civicrm_api('UFField', 'get', $params);
+      if ($field_results['is_error'] == 0) {
+        foreach ($field_results['values'] as $field_value) {
+          $field_name = $field_value['field_name'];
+          if(!preg_match('/^custom_[0-9]+/', $field_name)) {
+            // We only know how to lookup field types for custom
+            // fields. Skip core fields.
+            continue;
+          }
+
+          $id = substr(strrchr($field_name, '_'), 1);
+          // Finally, see if this is a text or textarea field.
+          $params = array('version' => 3, 'id' => $id);
+          $custom_results = civicrm_api('CustomField', 'get', $params);
+          if ($custom_results['is_error'] == 0) {
+            $field_value = array_pop($custom_results['values']);
+            $html_type = $field_value['html_type'];
+            $label = $field_value['label'];
+            $id = $field_value['id'];
+            if($html_type == 'Text' || $html_type == 'TextArea') {
+              $custom_fields[$id] = $label;
+            }
+          }
+        }
       }
-      $validcustomgroups[] = $group['id'];
     }
   }
-  $textareas = civicrm_api("CustomField","get", array('version' => '3','sequential' =>'1', 'html_type' =>'TextArea'));
-  if (is_array($textareas['values']) && $textareas['count'] > 0 && !$textareas['is_error']) {
-    $textarealist = array('' => '- Select -');
-    foreach ($textareas['values'] as $value) {
-      if ( in_array($value['custom_group_id'], $validcustomgroups) ) {
-        $textarealist[$value['id']] = $value['label'];
-      }
-    }
+  $custom_message_field_options = array();
+  if(count($custom_fields) == 0) {
+    $custom_message_field_options = array('' => t('- No Text or TextArea fields defined in your profiles -'));
   }
-  if ( $textarealist == array('' => '- Select -') )  {
-    $textarealist = array('' => '- No Textarea Fields -');
+  else {
+    $custom_message_field_options = array('' => t('- Select -'));
+    $custom_message_field_options = $custom_message_field_options + $custom_fields;
   }
-  $form->add('select', 'user_message', ts('Custom Message Field'), $textarealist);
+  $form->add('select', 'user_message', ts('Custom Message Field'), $custom_message_field_options);
   $form->add('textarea', 'default_message', ts('Default Message'));
   $form->add('text', 'subjectline', ts('Email Subject Line'));
 }
@@ -212,7 +238,7 @@ function civicrm_petition_email_civicrm_postProcess( $formName, &$form ) {
          ':recipient' =>  $form->_submitValues['recipient'], 
          ':recipient_name' => $form->_submitValues['recipient_name'], 
          ':default_message' => $form->_submitValues['default_message'],
-         ':message_field' => $form->_submitValues['user_message'],
+         ':message_field' => intval($form->_submitValues['user_message']),
          ':subject' => $form->_submitValues['subjectline'],
          ':survey_id' => $survey_id
        )
