@@ -254,31 +254,46 @@ function civicrm_petition_email_civicrm_post( $op, $objectName, $objectId, &$obj
   if ($op == 'create' && $objectName == 'Activity') {
     require_once 'api/api.php';
     $petitiontype = civicrm_petition_email_get_petition_type();
-    
     if ($objectRef->activity_type_id == $petitiontype) {
+      $survey_id = $objectRef->source_record_id;
+      $activity_id = $objectRef->id;
       global $language;  
-      $petitionemailval = db_query("SELECT petition_id, recipient_email, recipient_name, default_message, message_field, subject FROM {civicrm_petition_email} WHERE petition_id = :survey_id", array(':survey_id' => $objectRef->source_record_id));
-      foreach ($petitionemailval as $petitioninfo) {
-        $recipient_name = $petitioninfo->recipient_name;
-        $recipient = $petitioninfo->recipient_email;
-        $params = array( 'subject' => $petitioninfo->subject );
-        $user_message = 'custom_' . $petitioninfo->message_field;
-        $from = civicrm_api("Contact","getsingle", array ('version' => '3','sequential' =>'1', 'id' =>$objectRef->source_contact_id));
-        if ($from['email']) {
-          $fromline = $from['display_name'] . ' <' . $from['email'] . '>';
-        } else {
-          $domain = civicrm_api("Domain","get", array ('version' => '3','sequential' =>'1'));
-          if ($domain['is_error'] || !is_array($domain['values'])) { return; }
-          $fromline = '"' . $from['display_name'] . '"' . ' <' . $domain['values']['from_email'] . '>';
+      $sql = 'SELECT petition_id, recipient_email, recipient_name, default_message, message_field, subject FROM {civicrm_petition_email} WHERE petition_id = :survey_id';
+      $params = array(':survey_id' => $survey_id);
+      $result = db_query($sql, $params);
+      $petition = $result->fetchAssoc();
+
+      // Set up variables for the email message
+      // Figure out whether to use the user-supplied message or the default message
+      $petition_message = $objectRef->details;
+      if(empty($petition_message)) {
+        $petition_message = $petition['default_message'];
+      }
+      CRM_Core_Session::setStatus(print_r($objectRef,TRUE));
+      CRM_Core_Session::setStatus("petition message: $petition_message");
+      $to = $petition['recipient_name'] . ' <' . $petition['recipient_email'] . '>';
+      $from = civicrm_api("Contact","getsingle", array ('version' => '3','sequential' =>'1', 'id' =>$objectRef->source_contact_id));
+      if (array_key_exists('email', $from) && !empty($from['email'])) {
+        $from = $from['display_name'] . ' <' . $from['email'] . '>';
+      } else {
+        $domain = civicrm_api("Domain","get", array ('version' => '3','sequential' =>'1'));
+        if ($domain['is_error'] != 0 || !is_array($domain['values'])) { 
+          // Can't send email without a from address.
+          return; 
         }
-        $params['message'] = ( $objectRef->$user_message ) ? $objectRef->$user_message : $petitioninfo->default_message;
-        $success = drupal_mail('civicrm_petition_email', 'signature', $recipient_name . ' <' . $recipient . '>', $language, $params, $fromline);
-        if($success['result']) {
-          CRM_Core_Session::setStatus( ts('Message sent successfully to') . " $recipient_name" );
-        } else {
-          CRM_Core_Session::setStatus( ts('Error sending message to') . " $recipient_name" );
-        }
-        break;
+        $from = '"' . $from['display_name'] . '"' . ' <' . $domain['values']['from_email'] . '>';
+      }
+
+      // Setup email message
+      $params = array( 
+        'subject' => $petition['subject'],
+        'message' => $petition_message, 
+      );
+      $success = drupal_mail('civicrm_petition_email', 'signature', $to, $language, $params, $from);
+      if($success['result']) {
+        CRM_Core_Session::setStatus( ts('Message sent successfully to') . " $to" );
+      } else {
+        CRM_Core_Session::setStatus( ts('Error sending message to') . " $to" );
       }
     }
   }
