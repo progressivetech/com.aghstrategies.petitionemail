@@ -1,14 +1,21 @@
 <?php
 
+/**
+ * Implementation of hook_install.
+ **/
 function civicrm_petition_email_install() {
-  drupal_install_schema('civicrm_petition_email');
 }
 
+/**
+ * Implementation of hook_uninstall.
+ **/
 function civicrm_petition_email_uninstall() {
-  drupal_uninstall_schema('civicrm_petition_email');
   variable_del('civicrm_petition_email_petitiontype');
 }
 
+/**
+ * Implementation of hook_schema.
+ **/
 function civicrm_petition_email_schema() {
   $schema['civicrm_petition_email'] = array(
     'description' => t('Stores recipient and message information for petitions that should send emails'),
