@@ -252,16 +252,12 @@ function civicrm_petition_email_civicrm_postProcess( $formName, &$form ) {
 
 function civicrm_petition_email_civicrm_post( $op, $objectName, $objectId, &$objectRef ) {
   static $profile_fields = NULL;
-
   if($objectName == 'Profile' && is_array($objectRef)) {
-    if(array_key_exists('source', $objectRef)) {
-      if(preg_match('/^Petition Signature/', $objectRef['source'])) {
-        // Store the profile fields in a static array so when we come to the
-        // activity record, which could require us to send an email, we have
-        // the user defined message.  This seems fragile...
-        $profile_fields = $objectRef;
-      }
-    }
+    // This seems like broad criteria to be hanging on to a static array, however,
+    // not sure how else to capture the input to be used in case this is a petition
+    // being signed that has a target. If you are anonymous, you have a source field in the
+    // array, but that is not there if you are logged in. Sigh.
+      $profile_fields = $objectRef;
   }
 
   if ($op == 'create' && $objectName == 'Activity') {
@@ -275,6 +271,10 @@ function civicrm_petition_email_civicrm_post( $op, $objectName, $objectId, &$obj
       $params = array(':survey_id' => $survey_id);
       $result = db_query($sql, $params);
       $petition = $result->fetchAssoc();
+      if(empty($petition) || !array_key_exists('petition_id', $petition) || empty($petition['petition_id'])) {
+        // Must not be a petition with a target.
+        return;
+      }
 
       // Set up variables for the email message
       // Figure out whether to use the user-supplied message or the default message
