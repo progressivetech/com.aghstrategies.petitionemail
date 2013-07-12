@@ -251,6 +251,19 @@ function civicrm_petition_email_civicrm_postProcess( $formName, &$form ) {
 }
 
 function civicrm_petition_email_civicrm_post( $op, $objectName, $objectId, &$objectRef ) {
+  static $profile_fields = NULL;
+
+  if($objectName == 'Profile' && is_array($objectRef)) {
+    if(array_key_exists('source', $objectRef)) {
+      if(preg_match('/^Petition Signature/', $objectRef['source'])) {
+        // Store the profile fields in a static array so when we come to the
+        // activity record, which could require us to send an email, we have
+        // the user defined message.  This seems fragile...
+        $profile_fields = $objectRef;
+      }
+    }
+  }
+
   if ($op == 'create' && $objectName == 'Activity') {
     require_once 'api/api.php';
     $petitiontype = civicrm_petition_email_get_petition_type();
@@ -265,12 +278,27 @@ function civicrm_petition_email_civicrm_post( $op, $objectName, $objectId, &$obj
 
       // Set up variables for the email message
       // Figure out whether to use the user-supplied message or the default message
-      $petition_message = $objectRef->details;
-      if(empty($petition_message)) {
+      $petition_message = NULL;
+      // If the petition has specified a message field, and we've encountered the profile post action....
+      if(!empty($petition['message_field']) && !is_null($profile_fields)) {
+        if(is_numeric($petition['message_field'])) {
+          $message_field = 'custom_' . $petition['message_field'];
+        }
+        else {
+          $message_field = $petition['message_field'];
+        }
+        // If the field is in the profile
+        if(array_key_exists($message_field, $profile_fields)) {
+          // If it's not empty...
+          if(!empty($profile_fields[$message_field])) {
+            $petition_message = $profile_fields[$message_field];
+          }
+        }
+      }
+      // No user supplied message, use the default
+      if(is_null($petition_message)) {
         $petition_message = $petition['default_message'];
       }
-      CRM_Core_Session::setStatus(print_r($objectRef,TRUE));
-      CRM_Core_Session::setStatus("petition message: $petition_message");
       $to = $petition['recipient_name'] . ' <' . $petition['recipient_email'] . '>';
       $from = civicrm_api("Contact","getsingle", array ('version' => '3','sequential' =>'1', 'id' =>$objectRef->source_contact_id));
       if (array_key_exists('email', $from) && !empty($from['email'])) {
