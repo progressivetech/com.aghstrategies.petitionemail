@@ -5,6 +5,14 @@ DB STRUCTURE
 petition id, recipient email, recipient name, default message, message field, subject
 */
 
+function civicrm_petition_email_civicrm_config( &$config ) {
+  // Include our templates directory.
+  $template_dir = dirname(__FILE__) . 
+    DIRECTORY_SEPARATOR . 'templates';
+
+  $template =& CRM_Core_Smarty::singleton( );
+  array_unshift( $template->template_dir, $template_dir );
+}
 function civicrm_petition_email_civicrm_buildForm( $formName, &$form ) {
   if ($formName == 'CRM_Campaign_Form_Petition_Signature') {  
     $survey_id = $form->getVar('_surveyId');
@@ -104,17 +112,19 @@ function civicrm_petition_email_civicrm_alterContent(  &$content, $context, $tpl
 
     //insert the field before is_active
     $insertpoint = strpos($content, '<tr class="crm-campaign-survey-form-block-is_active">');
+
+    $help_code = "<a class=\"helpicon\" onclick=\"CRM.help('Petition Email', {'id':'id-email-petition','file':'CRM\/Campaign\/Form\/Petition'}); return false;\" href=\"#\" title=\"Petition Email Help\"></a>";
     $content1 = substr($content, 0, $insertpoint);
     $content3 = substr($content, $insertpoint);
     $content2 = '
   <tr class="crm-campaign-survey-form-block-email_petition">
-    <td class="label">'. $rendererval->_tpl->_tpl_vars['form']['email_petition']['label'] .'</td>
+    <td class="label">'. $rendererval->_tpl->_tpl_vars['form']['email_petition']['label'] . $help_code . '</td>
     <td>'.$rendererval->_tpl->_tpl_vars['form']['email_petition']['html'].'
-      <div class="description">'.ts('Should signatures generate an email to the petition\'s target?').'</div>
+      <div class="description">'.ts('Should signatures generate an email to the petition\'s  target?') .'</div>
     </td>
   </tr>
   <tr class="crm-campaign-survey-form-block-recipient_name">
-    <td class="label">'. $rendererval->_tpl->_tpl_vars['form']['recipient_name']['label'] .'</td>
+  <td class="label">'. $rendererval->_tpl->_tpl_vars['form']['recipient_name']['label'] .  '</td>
     <td>'.$rendererval->_tpl->_tpl_vars['form']['recipient_name']['html'].'
       <div class="description">'.ts('Enter the target\'s name (as he or she should see it) here.').'</div>
     </td>
