@@ -309,17 +309,30 @@ function civicrm_petition_email_civicrm_post( $op, $objectName, $objectId, &$obj
       if(is_null($petition_message)) {
         $petition_message = $petition['default_message'];
       }
-      $to = $petition['recipient_name'] . ' <' . $petition['recipient_email'] . '>';
-      $from = civicrm_api("Contact","getsingle", array ('version' => '3','sequential' =>'1', 'id' =>$objectRef->source_contact_id));
-      if (array_key_exists('email', $from) && !empty($from['email'])) {
-        $from = $from['display_name'] . ' <' . $from['email'] . '>';
-      } else {
+      $to = '"' . $petition['recipient_name'] . '" <' . $petition['recipient_email'] . '>';
+
+      // Figure out the user id that created this activity so we can set the from address
+      $from = NULL;
+
+      // Get the record_type_id for Source Activity records.
+      $activity_contacts = CRM_Core_OptionGroup::values('activity_contacts', FALSE, FALSE, FALSE, NULL, 'name');
+      $source_id   = CRM_Utils_Array::key('Activity Source', $activity_contacts);
+
+      // Get the source contact for this activity
+      $params = array('activity_id' => $objectRef->id, 'record_type_id' => $source_id);
+      try{
+        $value = civicrm_api3("Contact","getsingle", $params);
+        $from = $value['display_name'] . ' <' . $value['email'] . '>';
+      }
+      catch (CiviCRM_API3_Exception $e) {
+        // If there's an error, use default values for from address
         $domain = civicrm_api("Domain","get", array ('version' => '3','sequential' =>'1'));
         if ($domain['is_error'] != 0 || !is_array($domain['values'])) { 
           // Can't send email without a from address.
           return; 
         }
-        $from = '"' . $from['display_name'] . '"' . ' <' . $domain['values']['from_email'] . '>';
+        $value = array_pop($domain['values']);
+        $from = '"' . $value['from_name'] . '"' . ' <' . $value['from_email'] . '>';
       }
 
       // Setup email message
