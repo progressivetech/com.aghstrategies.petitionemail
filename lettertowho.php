@@ -188,7 +188,6 @@ function civicrm_petition_email_civicrm_buildForm($formName, &$form) {
   if ($formName == 'CRM_Campaign_Form_Petition_Signature') {
     $survey_id = $form->getVar('_surveyId');
     if ($survey_id) {
-      // TODO: change from database query to API call
       // $petitionemailval = db_query('SELECT petition_id, recipient_email, recipient_name, default_message, message_field, subject FROM {civicrm_petition_email} WHERE petition_id = :survey_id', array(':survey_id' => $survey_id));
       $petitionemailval = civicrm_api('Survey', 'get', array(
         'version' => '3',
@@ -309,17 +308,13 @@ function civicrm_petition_email_civicrm_alterContent(&$content, $context, $tplNa
     }
 
     //insert the field before is_active
-    //
-    // TODO: Move mark up to template and use smarty to grab fields
-    // $smarty = new Smarty;
-    $smarty->assign('custom_default_message', $custom_default_message);  // {$foo} will equal "bar"
-    $smarty->assign('custom_recipient_name', $custom_recipient_name);  // {$custom_email_recipient}
+    $smarty = new Smarty;
+    $smarty->assign('custom_default_message', $custom_default_message);
+    $smarty->assign('custom_recipient_name', $custom_recipient_name);
     $smarty->assign('custom_recipient_email', $custom_recipient_email);
     $smarty->assign('custom_subject', $custom_subject);
     $smarty->assign('recipient', $recipient);
-
     $insertpoint = strpos($content, '<tr class="crm-campaign-survey-form-block-is_active">');
-
     $help_code = "<a class=\"helpicon\" onclick=\"CRM.help('Petition Email', {'id':'id-email-petition','file':'CRM\/Campaign\/Form\/Petition'}); return false;\" href=\"#\" title=\"Petition Email Help\"></a>";
     $content1 = substr($content, 0, $insertpoint);
     $content3 = substr($content, $insertpoint);
@@ -429,7 +424,7 @@ function civicrm_petition_email_civicrm_post($op, $objectName, $objectId, &$obje
       $activity_id = $objectRef->id;
       global $language;
       // $sql = 'SELECT petition_id, recipient_email, recipient_name, default_message, message_field, subject FROM {civicrm_petition_email} WHERE petition_id = :survey_id';
-      $sql =  civicrm_api('Survey', 'get', array(
+      $sql = civicrm_api('Survey', 'get', array(
             'version' => '3',
             'sequential' => 1,
             "custom_subject" => "",
