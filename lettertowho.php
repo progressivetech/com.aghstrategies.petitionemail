@@ -193,16 +193,22 @@ function civicrm_petition_email_civicrm_buildForm($formName, &$form) {
       $petitionemailval = civicrm_api('Survey', 'get', array(
         'version' => '3',
         'sequential' => 1,
+        "custom_subject" => "",
+        "custom_default_message" => "",
+        "custom_recipient_name" => '',
+        "custom_recipient_email" => "",
+        "petition_id" => "",
+        "survey_id" => "",
       ));
       foreach ($petitionemailval as $petitioninfo) {
         $defaults = $form->getVar('_defaults');
         $messagefield = 'custom_' . $petitioninfo->message_field;
         foreach ($form->_elements as $element) {
           if ($element->_attributes['name'] == $messagefield) {
-            $element->_value = $petitioninfo->default_message;
+            $element->_value = $petitioninfo->custom_default_message;
           }
         }
-        $defaults[$messagefield] = $form->_defaultValues[$messagefield] = $petitioninfo->default_message;
+        $defaults[$messagefield] = $form->_defaultValues[$messagefield] = $petitioninfo->custom_default_message;
         $form->setVar('_defaults', $defaults);
         break;
       }
@@ -219,19 +225,25 @@ function civicrm_petition_email_civicrm_buildForm($formName, &$form) {
     $petitionemailval = civicrm_api('Survey', 'get', array(
       'version' => '3',
       'sequential' => 1,
+      "custom_subject" => "",
+      "custom_default_message" => "",
+      "custom_recipient_name" => '',
+      "custom_recipient_email" => "",
+      "petition_id" => "",
+      "survey_id" => "",
     ));
     foreach ($petitionemailval as $petitioninfo) {
       $form->_defaultValues['email_petition'] = 1;
-      $form->_defaultValues['recipient_name'] = $petitioninfo->recipient_name;
+      $form->_defaultValues['custom_recipient_name'] = $petitioninfo->recipient_name;
       $form->_defaultValues['recipient'] = $petitioninfo->recipient_email;
-      $form->_defaultValues['default_message'] = $petitioninfo->default_message;
+      $form->_defaultValues['custom_default_message'] = $petitioninfo->default_message;
       $form->_defaultValues['user_message'] = $petitioninfo->message_field;
       $form->_defaultValues['subjectline'] = $petitioninfo->subject;
       break;
     }
   }
   $form->add('checkbox', 'email_petition', ts('Send an email to a target'));
-  $form->add('text', 'recipient_name', ts('Recipient\'s Name'));
+  $form->add('text', 'custom_recipient_name', ts('Recipient\'s Name'));
   $form->add('text', 'recipient', ts('Recipient\'s Email'));
   $validcustomgroups = array();
 
@@ -284,7 +296,7 @@ function civicrm_petition_email_civicrm_buildForm($formName, &$form) {
     $custom_message_field_options = $custom_message_field_options + $custom_fields;
   }
   $form->add('select', 'user_message', ts('Custom Message Field'), $custom_message_field_options);
-  $form->add('textarea', 'default_message', ts('Default Message'));
+  $form->add('textarea', 'custom_default_message', ts('Default Message'));
   $form->add('text', 'subjectline', ts('Email Subject Line'));
 }
 
@@ -299,52 +311,20 @@ function civicrm_petition_email_civicrm_alterContent(&$content, $context, $tplNa
     //insert the field before is_active
     //
     // TODO: Move mark up to template and use smarty to grab fields
+    // $smarty = new Smarty;
+    $smarty->assign('custom_default_message', $custom_default_message);  // {$foo} will equal "bar"
+    $smarty->assign('custom_recipient_name', $custom_recipient_name);  // {$custom_email_recipient}
+    $smarty->assign('custom_recipient_email', $custom_recipient_email);
+    $smarty->assign('custom_subject', $custom_subject);
+    $smarty->assign('recipient', $recipient);
+
     $insertpoint = strpos($content, '<tr class="crm-campaign-survey-form-block-is_active">');
 
     $help_code = "<a class=\"helpicon\" onclick=\"CRM.help('Petition Email', {'id':'id-email-petition','file':'CRM\/Campaign\/Form\/Petition'}); return false;\" href=\"#\" title=\"Petition Email Help\"></a>";
     $content1 = substr($content, 0, $insertpoint);
     $content3 = substr($content, $insertpoint);
-    // TODO: Moved content2 to petition_email_form.html - replace vars with smarty, put something here to link it back
-    $content2 = '<tr class="crm-campaign-survey-form-block-email_petition">
-      <td class="label">'.{ $rendererval->_tpl->_tpl_vars['form']['email_petition']['label']} . $help_code . '</td>
-      <td>'.$rendererval->_tpl->_tpl_vars['form']['email_petition']['html'].'
-        <div class="description">'.ts('Should signatures generate an email to the petition\'s  target?') .'</div>
-      </td>
-    </tr>
-    <tr class="crm-campaign-survey-form-block-recipient_name">
-    <td class="label">'. $rendererval->_tpl->_tpl_vars['form']['recipient_name']['label'] .  '</td>
-      <td>'.$rendererval->_tpl->_tpl_vars['form']['recipient_name']['html'].'
-        <div class="description">'.ts('Enter the target\'s name (as he or she should see it) here.').'</div>
-      </td>
-    </tr>
-    <tr class="crm-campaign-survey-form-block-recipient">
-      <td class="label">'. $rendererval->_tpl->_tpl_vars['form']['recipient']['label'] .'</td>
-      <td>'.$rendererval->_tpl->_tpl_vars['form']['recipient']['html'].'
-        <div class="description">'.ts('Enter the target\'s email address here.').'</div>
-      </td>
-    </tr>
-    <tr class="crm-campaign-survey-form-block-user_message">
-      <td class="label">'. $rendererval->_tpl->_tpl_vars['form']['user_message']['label'] .'</td>
-      <td>'.$rendererval->_tpl->_tpl_vars['form']['user_message']['html'].'
-        <div class="description">'.ts('Select a field that will have the signer\'s custom message.  Make sure it is included in the Activity Profile you selected.').'</div>
-      </td>
-    </tr>
-    <tr class="crm-campaign-survey-form-block-default_message">
-      <td class="label">'. $rendererval->_tpl->_tpl_vars['form']['default_message']['label'] .'</td>
-      <td>'.$rendererval->_tpl->_tpl_vars['form']['default_message']['html'].'
-        <div class="description">'.ts('Enter the default message to be included in the email.').'</div>
-      </td>
-    </tr>
-    <tr class="crm-campaign-survey-form-block-subjectline">
-      <td class="label">'. $rendererval->_tpl->_tpl_vars['form']['subjectline']['label'] .'</td>
-      <td>'.$rendererval->_tpl->_tpl_vars['form']['subjectline']['html'].'
-        <div class="description">'.ts('Enter the subject line to be included in the email.').'</div>
-      </td>
-    </tr>';
-
-    // jQuery to show/hide the email fields
-    // TODO: Moved JS to petition_email_form.js, need to find a wa to link it back here
-    $content4 = '';
+    $content2 = $smarty->display('petition_email_form.tpl');
+    $content4 = 'petition_email_form.js';
 
     $content = $content1 . $content2 . $content3 . $content4;
   }
@@ -379,32 +359,51 @@ function civicrm_petition_email_civicrm_postProcess($formName, &$form) {
     }
 
     // TODO: Change from DB INSERT into API create
-    $checkexisting = db_query("SELECT count(*) AS count FROM {civicrm_petition_email} WHERE petition_id = :survey_id", array(':survey_id' => $survey_id));
+    // $checkexisting = db_query("SELECT count(*) AS count FROM {civicrm_petition_email} WHERE petition_id = :survey_id", array(':survey_id' => $survey_id));
+    $checkexisting = civicrm_api('Survey', 'get', array(
+      'version' => '3',
+      'sequential' => 1,
+      "custom_subject" => "",
+      "custom_default_message" => "",
+      "custom_recipient_name" => '',
+      "custom_recipient_email" => "",
+      "petition_id" => "",
+      "survey_id" => "",
+    ));
     $row = $checkexisting->fetchAssoc();
-    if ($row['count'] == 0) {
-      $insert = db_query(
-        "INSERT INTO {civicrm_petition_email} (petition_id, recipient_email, recipient_name, default_message, message_field, subject) VALUES ( :survey_id, :recipient, :recipient_name, :default_message, :user_message, :subjectline )", array(
-          ':survey_id' => $survey_id,
-          ':recipient' => $form->_submitValues['recipient'],
-          ':recipient_name' => $form->_submitValues['recipient_name'],
-          ':default_message' => $form->_submitValues['default_message'],
-          ':user_message' => intval($form->_submitValues['user_message']),
-          ':subjectline' => $form->_submitValues['subjectline'],
-        )
-      );
-    }
-    else {
-      $insert = db_query(
-        "UPDATE {civicrm_petition_email} SET recipient_email = :recipient, recipient_name = :recipient_name, default_message = :default_message, message_field = :message_field, subject = :subject WHERE petition_id = :survey_id", array(
-          ':recipient' => $form->_submitValues['recipient'],
-          ':recipient_name' => $form->_submitValues['recipient_name'],
-          ':default_message' => $form->_submitValues['default_message'],
-          ':message_field' => intval($form->_submitValues['user_message']),
-          ':subject' => $form->_submitValues['subjectline'],
-          ':survey_id' => $survey_id,
-        )
-      );
-    }
+    // if ($row['count'] == 0) {
+      // $insert = db_query(
+      //   "INSERT INTO {civicrm_petition_email} (petition_id, recipient_email, recipient_name, default_message, message_field, subject) VALUES ( :survey_id, :recipient, :recipient_name, :default_message, :user_message, :subjectline )", array(
+      //     ':survey_id' => $survey_id,
+      //     ':recipient' => $form->_submitValues['recipient'],
+      //     ':recipient_name' => $form->_submitValues['recipient_name'],
+      //     ':default_message' => $form->_submitValues['default_message'],
+      //     ':user_message' => intval($form->_submitValues['user_message']),
+      //     ':subjectline' => $form->_submitValues['subjectline'],
+      //   )
+      // );
+      $insert = civicrm_api('Survey', 'create', array(
+        ':survey_id' => $survey_id,
+        ':recipient' => $form->_submitValues['recipient'],
+        ':custom_recipient_name' => $form->_submitValues['recipient_name'],
+        ':custom_default_message' => $form->_submitValues['default_message'],
+        ':user_message' => intval($form->_submitValues['user_message']),
+        ':subjectline' => $form->_submitValues['subjectline'],
+      ));
+    // }
+    // else {
+      // $insert = db_query(
+      //   "UPDATE {civicrm_petition_email} SET recipient_email = :recipient, recipient_name = :recipient_name, default_message = :default_message, message_field = :message_field, subject = :subject WHERE petition_id = :survey_id", array(
+      //     ':recipient' => $form->_submitValues['recipient'],
+      //     ':recipient_name' => $form->_submitValues['recipient_name'],
+      //     ':default_message' => $form->_submitValues['default_message'],
+      //     ':message_field' => intval($form->_submitValues['user_message']),
+      //     ':subject' => $form->_submitValues['subjectline'],
+      //     ':survey_id' => $survey_id,
+      //   )
+      // );
+
+    // }
     if (!$insert) {
       CRM_Core_Session::setStatus(ts('Could not save petition delivery information.'));
     }
@@ -429,8 +428,19 @@ function civicrm_petition_email_civicrm_post($op, $objectName, $objectId, &$obje
       $survey_id = $objectRef->source_record_id;
       $activity_id = $objectRef->id;
       global $language;
-      $sql = 'SELECT petition_id, recipient_email, recipient_name, default_message, message_field, subject FROM {civicrm_petition_email} WHERE petition_id = :survey_id';
+      // $sql = 'SELECT petition_id, recipient_email, recipient_name, default_message, message_field, subject FROM {civicrm_petition_email} WHERE petition_id = :survey_id';
+      $sql =  civicrm_api('Survey', 'get', array(
+            'version' => '3',
+            'sequential' => 1,
+            "custom_subject" => "",
+            "custom_default_message" => "",
+            "custom_recipient_name" => '',
+            "custom_recipient_email" => "",
+            "petition_id" => "",
+            "survey_id" => "",
+          ));
       $params = array(':survey_id' => $survey_id);
+      // TODO: Not sure how to proceed here
       $result = db_query($sql, $params);
       $petition = $result->fetchAssoc();
       if (empty($petition) || !array_key_exists('petition_id', $petition) || empty($petition['petition_id'])) {
@@ -459,9 +469,9 @@ function civicrm_petition_email_civicrm_post($op, $objectName, $objectId, &$obje
       }
       // No user supplied message, use the default
       if (is_null($petition_message)) {
-        $petition_message = $petition['default_message'];
+        $petition_message = $petition['custom_default_message'];
       }
-      $to = '"' . $petition['recipient_name'] . '" <' . $petition['recipient_email'] . '>';
+      $to = '"' . $petition['custom_recipient_name'] . '" <' . $petition['custom_recipient_email'] . '>';
 
       // Figure out the user id that created this activity so we can set the from address
       $from = NULL;

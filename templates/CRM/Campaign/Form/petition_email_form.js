@@ -1,4 +1,4 @@
-// TODO: Smarty
+// TODO
 
 cj(document).ready( function() {
   showHideEmailPetition();
