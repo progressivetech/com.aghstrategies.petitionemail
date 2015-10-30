@@ -135,7 +135,7 @@ function lettertowho_civicrm_preProcess($formName, &$form) {
 
 }
  */
-
+// This function gets the custome fields, usualy called custom_NUM, and renames them to custom_field_name -NM
 function getCustomGroup() {
   if (empty(static::$customGroup)) {
     $params = array(
@@ -188,16 +188,10 @@ function civicrm_petition_email_civicrm_buildForm($formName, &$form) {
   if ($formName == 'CRM_Campaign_Form_Petition_Signature') {
     $survey_id = $form->getVar('_surveyId');
     if ($survey_id) {
-      // $petitionemailval = db_query('SELECT petition_id, recipient_email, recipient_name, default_message, message_field, subject FROM {civicrm_petition_email} WHERE petition_id = :survey_id', array(':survey_id' => $survey_id));
+      // TODO: This was the old sql query, not sure if I got the API call correct:  -NM $petitionemailval = db_query('SELECT petition_id, recipient_email, recipient_name, default_message, message_field, subject FROM {civicrm_petition_email} WHERE petition_id = :survey_id', array(':survey_id' => $survey_id));
       $petitionemailval = civicrm_api('Survey', 'get', array(
         'version' => '3',
         'sequential' => 1,
-        "custom_subject" => "",
-        "custom_default_message" => "",
-        "custom_recipient_name" => '',
-        "custom_recipient_email" => "",
-        "petition_id" => "",
-        "survey_id" => "",
       ));
       foreach ($petitionemailval as $petitioninfo) {
         $defaults = $form->getVar('_defaults');
@@ -219,17 +213,12 @@ function civicrm_petition_email_civicrm_buildForm($formName, &$form) {
   }
   $survey_id = $form->getVar('_surveyId');
   if ($survey_id) {
-    // TODO: Change from database query to API call
+    // TODO: Change from database query to API call - This was the old sql query, not sure if I got the API call correct -NM
     // $petitionemailval = db_query('SELECT petition_id, recipient_email, recipient_name, default_message, message_field, subject FROM {civicrm_petition_email} WHERE petition_id = :survey_id', array(':survey_id' => $survey_id));
     $petitionemailval = civicrm_api('Survey', 'get', array(
       'version' => '3',
       'sequential' => 1,
-      "custom_subject" => "",
-      "custom_default_message" => "",
-      "custom_recipient_name" => '',
-      "custom_recipient_email" => "",
-      "petition_id" => "",
-      "survey_id" => "",
+      "survey_id" => $survey_id
     ));
     foreach ($petitionemailval as $petitioninfo) {
       $form->_defaultValues['email_petition'] = 1;
@@ -262,7 +251,7 @@ function civicrm_petition_email_civicrm_buildForm($formName, &$form) {
       if ($field_results['is_error'] == 0) {
         foreach ($field_results['values'] as $field_value) {
           $field_name = $field_value['field_name'];
-          // TODO: since on install this field will be created, have it look for that field specifically
+          // TODO: since on install this field will be created, have it look for that field specifically -NM
           if (!preg_match('/^custom_[0-9]+/', $field_name)) {
             // We only know how to lookup field types for custom
             // fields. Skip core fields.
@@ -307,7 +296,8 @@ function civicrm_petition_email_civicrm_alterContent(&$content, $context, $tplNa
       return;
     }
 
-    //insert the field before is_active
+    //insert the field before is_active -NM
+    // Here I was using smarty instead of the hard coded JS and HTML that was in the drupal extension. I am setting up the smarty here, not sure if I got the fields correct -NM
     $smarty = new Smarty;
     $smarty->assign('custom_default_message', $custom_default_message);
     $smarty->assign('custom_recipient_name', $custom_recipient_name);
@@ -319,14 +309,14 @@ function civicrm_petition_email_civicrm_alterContent(&$content, $context, $tplNa
     $content1 = substr($content, 0, $insertpoint);
     $content3 = substr($content, $insertpoint);
     $content2 = $smarty->display('petition_email_form.tpl');
-    $content4 = 'petition_email_form.js';
+    $content4 = 'petition_email_form.js'; // TODO: I don't think it's pulling in this JS, need to figure out how to get the JS file (petition_email_form.js) into content4 -NM
 
     $content = $content1 . $content2 . $content3 . $content4;
   }
 }
 
 /**
- * TODO: change from using table to making an API call
+ * TODO: change from using table to making an API call -NM
  */
 function civicrm_petition_email_civicrm_postProcess($formName, &$form) {
   if ($formName != 'CRM_Campaign_Form_Petition') {
@@ -353,7 +343,7 @@ function civicrm_petition_email_civicrm_postProcess($formName, &$form) {
       return;
     }
 
-    // TODO: Change from DB INSERT into API create
+    // TODO: Change from DB INSERT into API create -NM
     // $checkexisting = db_query("SELECT count(*) AS count FROM {civicrm_petition_email} WHERE petition_id = :survey_id", array(':survey_id' => $survey_id));
     $checkexisting = civicrm_api('Survey', 'get', array(
       'version' => '3',
@@ -365,7 +355,7 @@ function civicrm_petition_email_civicrm_postProcess($formName, &$form) {
       "petition_id" => "",
       "survey_id" => "",
     ));
-    $row = $checkexisting->fetchAssoc();
+    $row = $checkexisting->fetchAssoc(); // TODO: Commented this out as it's for updating and the API does this through create -NM
     // if ($row['count'] == 0) {
       // $insert = db_query(
       //   "INSERT INTO {civicrm_petition_email} (petition_id, recipient_email, recipient_name, default_message, message_field, subject) VALUES ( :survey_id, :recipient, :recipient_name, :default_message, :user_message, :subjectline )", array(
@@ -386,6 +376,7 @@ function civicrm_petition_email_civicrm_postProcess($formName, &$form) {
         ':subjectline' => $form->_submitValues['subjectline'],
       ));
     // }
+    // TODO: Again, commenting this out as it's to UPDATE and the API does this through CREATE -NM
     // else {
       // $insert = db_query(
       //   "UPDATE {civicrm_petition_email} SET recipient_email = :recipient, recipient_name = :recipient_name, default_message = :default_message, message_field = :message_field, subject = :subject WHERE petition_id = :survey_id", array(
@@ -423,6 +414,7 @@ function civicrm_petition_email_civicrm_post($op, $objectName, $objectId, &$obje
       $survey_id = $objectRef->source_record_id;
       $activity_id = $objectRef->id;
       global $language;
+      // TODO: SQL to API, here's old SQL, not sure if i got the API call correct -NM
       // $sql = 'SELECT petition_id, recipient_email, recipient_name, default_message, message_field, subject FROM {civicrm_petition_email} WHERE petition_id = :survey_id';
       $sql = civicrm_api('Survey', 'get', array(
             'version' => '3',
@@ -435,7 +427,7 @@ function civicrm_petition_email_civicrm_post($op, $objectName, $objectId, &$obje
             "survey_id" => "",
           ));
       $params = array(':survey_id' => $survey_id);
-      // TODO: Not sure how to proceed here
+      // TODO: Not sure how to proceed here, I'm a little confused by what this is supposed to be doing in the DB and not sure how to re-create it with API call -NM
       $result = db_query($sql, $params);
       $petition = $result->fetchAssoc();
       if (empty($petition) || !array_key_exists('petition_id', $petition) || empty($petition['petition_id'])) {
@@ -493,7 +485,7 @@ function civicrm_petition_email_civicrm_post($op, $objectName, $objectId, &$obje
       }
 
       // Setup email message
-      // TODO: change from drupal mail to Civi mail
+      // TODO: change from drupal mail to Civi mail -NM
       $params = array(
         'subject' => $petition['subject'],
         'message' => $petition_message,
@@ -517,7 +509,7 @@ function civicrm_petition_email_mail($key, &$message, $params) {
 function civicrm_petition_email_get_petition_type() {
   $petitiontype = variable_get('civicrm_petition_email_petitiontype', FALSE);
 
-  // TODO: probably not needed, can use survey get
+  // TODO: probably not needed, can use survey get -NM
   if (!$petitiontype) {// Go figure out and set the activity type id
     $acttypegroup = civicrm_api("OptionGroup", "getsingle", array('version' => '3', 'sequential' => '1', 'name' => 'activity_type'));
     if ($acttypegroup['id'] && !$acttypegroup['is_error']) {

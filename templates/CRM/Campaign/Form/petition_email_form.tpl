@@ -11,7 +11,7 @@
   </td>
 </tr>
 <tr class="crm-campaign-survey-form-block-recipient">
-  <td class="label">{$form.recipient.lable}</td>
+  <td class="label">{$form.recipient.label}</td>
   <td>{$form.recipient.html}
     <div class="description">'.ts('Enter the email address of the target here.').'</div>
   </td>

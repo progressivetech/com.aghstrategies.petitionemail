@@ -1,56 +1,40 @@
 <?php
 
-/**
- * Implementation of hook_install.
- **/
-function civicrm_petition_email_install() {
-}
-
-/**
- * Implementation of hook_uninstall.
- **/
-function civicrm_petition_email_uninstall() {
-  variable_del('civicrm_petition_email_petitiontype');
-}
-
-/**
- * Implementation of hook_schema.
- **/
 function civicrm_petition_email_schema() {
   $schema['civicrm_petition_email'] = array(
-    'description' => t('Stores recipient and message information for petitions that should send emails'),
+    'description' => ts('Stores recipient and message information for petitions that should send emails'),
     'fields' => array(
       'petition_id' => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
-        'description' => t('The SID of the petition.'),
+        'description' => ts('The SID of the petition.'),
       ),
       'recipient_email' => array(
         'type' => 'varchar',
-        'description' => t('The email of the petition target.'),
+        'description' => ts('The email of the petition target.'),
         'length' => 128,
       ),
       'recipient_name' => array(
         'type' => 'varchar',
-        'description' => t('The display name of the petition target.'),
+        'description' => ts('The display name of the petition target.'),
         'length' => 128,
       ),
       'default_message' => array(
         'type' => 'text',
-        'description' => ('The default message for the petition'),
+        'description' => ts('The default message for the petition'),
       ),
       'message_field' => array(
         'type' => 'int',
-        'description' => t('The ID of the custom field used for petition messages.'),
+        'description' => ts('The ID of the custom field used for petition messages.'),
         'unsigned' => TRUE,
         'default' => 0,
         'not null' => TRUE,
       ),
       'subject' => array(
         'type' => 'varchar',
-        'description' => t('The subject line for outgoing emails.'),
+        'description' => ts('The subject line for outgoing emails.'),
         'length' => 128,
       ),
     ),
@@ -59,6 +43,6 @@ function civicrm_petition_email_schema() {
       'petition_id' => array('petition_id'),
     ),
   );
-  
+
   return $schema;
-} 
+}

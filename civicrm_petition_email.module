@@ -1,4 +1,6 @@
 <?php
+// TODO: port this into the civix extension and remove reliance on a database and instead create custom fields in demo site, export to XML to be loaded on install. Create them in Survey, then make API calls instead of SQL queries.
+
 
 /*
 DB STRUCTURE
@@ -7,23 +9,28 @@ petition id, recipient email, recipient name, default message, message field, su
 
 function civicrm_petition_email_civicrm_config( &$config ) {
   // Include our templates directory.
-  $template_dir = dirname(__FILE__) . 
+  $template_dir = dirname(__FILE__) .
     DIRECTORY_SEPARATOR . 'templates';
 
   $template =& CRM_Core_Smarty::singleton( );
   array_unshift( $template->template_dir, $template_dir );
 }
 function civicrm_petition_email_civicrm_buildForm( $formName, &$form ) {
-  if ($formName == 'CRM_Campaign_Form_Petition_Signature') {  
+  if ($formName == 'CRM_Campaign_Form_Petition_Signature') {
     $survey_id = $form->getVar('_surveyId');
     if ($survey_id) {
-      $petitionemailval = db_query('SELECT petition_id, recipient_email, recipient_name, default_message, message_field, subject FROM {civicrm_petition_email} WHERE petition_id = :survey_id', array(':survey_id' => $survey_id));
+      // TODO: change from database query to API call
+      // $petitionemailval = db_query('SELECT petition_id, recipient_email, recipient_name, default_message, message_field, subject FROM {civicrm_petition_email} WHERE petition_id = :survey_id', array(':survey_id' => $survey_id));
+      $petitionemailval = civicrm_api('Survey', 'get', array(
+        'version' => '3',
+          'sequential' => 1,
+      ));
       foreach ($petitionemailval as $petitioninfo ) {
         $defaults = $form->getVar('_defaults');
         $messagefield = 'custom_' . $petitioninfo->message_field;
         foreach ($form->_elements as $element) {
-          if ($element->_attributes['name'] == $messagefield) { 
-            $element->_value = $petitioninfo->default_message; 
+          if ($element->_attributes['name'] == $messagefield) {
+            $element->_value = $petitioninfo->default_message;
           }
         }
         $defaults[$messagefield] = $form->_defaultValues[$messagefield] = $petitioninfo->default_message;
@@ -36,7 +43,13 @@ function civicrm_petition_email_civicrm_buildForm( $formName, &$form ) {
   if ($formName != 'CRM_Campaign_Form_Petition') { return; }
   $survey_id = $form->getVar('_surveyId');
   if ($survey_id) {
-    $petitionemailval = db_query('SELECT petition_id, recipient_email, recipient_name, default_message, message_field, subject FROM {civicrm_petition_email} WHERE petition_id = :survey_id', array(':survey_id' => $survey_id));
+    // TODO: Change from database query to API call
+    // $petitionemailval = db_query('SELECT petition_id, recipient_email, recipient_name, default_message, message_field, subject FROM {civicrm_petition_email} WHERE petition_id = :survey_id', array(':survey_id' => $survey_id));
+    $petitionemailval = civicrm_api('Survey', 'get', array(
+      'version' => '3',
+        'sequential' => 1,
+    ));
+    // TODO: since it returns custom_field1, etc, will this work?
     foreach ($petitionemailval as $petitioninfo) {
       $form->_defaultValues['email_petition'] = 1;
       $form->_defaultValues['recipient_name'] = $petitioninfo->recipient_name;
@@ -68,6 +81,7 @@ function civicrm_petition_email_civicrm_buildForm( $formName, &$form ) {
       if ($field_results['is_error'] == 0) {
         foreach ($field_results['values'] as $field_value) {
           $field_name = $field_value['field_name'];
+          // TODO: since on install this fied will be created, have it look for that field specifically
           if(!preg_match('/^custom_[0-9]+/', $field_name)) {
             // We only know how to lookup field types for custom
             // fields. Skip core fields.
@@ -111,6 +125,8 @@ function civicrm_petition_email_civicrm_alterContent(  &$content, $context, $tpl
     if ($action == 8) { return; }
 
     //insert the field before is_active
+    //
+    // TODO: Move mark up to template and use smarty to grab fields
     $insertpoint = strpos($content, '<tr class="crm-campaign-survey-form-block-is_active">');
 
     $help_code = "<a class=\"helpicon\" onclick=\"CRM.help('Petition Email', {'id':'id-email-petition','file':'CRM\/Campaign\/Form\/Petition'}); return false;\" href=\"#\" title=\"Petition Email Help\"></a>";
@@ -154,8 +170,8 @@ function civicrm_petition_email_civicrm_alterContent(  &$content, $context, $tpl
     </td>
   </tr>
 ';
-       
-    // jQuery to show/hide the email fields   
+
+    // jQuery to show/hide the email fields
     $content4 = '
     <script type="text/javascript">
       cj(document).ready( function() {
@@ -165,11 +181,11 @@ function civicrm_petition_email_civicrm_alterContent(  &$content, $context, $tpl
         cj("#profile_id").change( function() { checkProfileIncludesMessage(); });
         cj("#user_message").change( function() { checkProfileIncludesMessage(); });
       });
-      
+
       function checkProfileIncludesMessage() {
         cj("#profileMissingMessage").remove();
         var actProfile = cj("#profile_id").val();
-        cj().crmAPI("UFField","get",{ "sequential" :"1", "uf_group_id" : actProfile },{ success:function (data){    
+        cj().crmAPI("UFField","get",{ "sequential" :"1", "uf_group_id" : actProfile },{ success:function (data){
           var msgField = cj("#user_message").val();
           if (msgField) {
             var fieldinfo = cj.inArray(msgField, data["values"])
@@ -203,11 +219,12 @@ function civicrm_petition_email_civicrm_alterContent(  &$content, $context, $tpl
         }
       }
     </script>';
-    
+
     $content = $content1.$content2.$content3.$content4;
   }
 }
 
+//TODO: change from using table to making an API call
 function civicrm_petition_email_civicrm_postProcess( $formName, &$form ) {
   if ($formName != 'CRM_Campaign_Form_Petition') { return; }
   if ( $form->_submitValues['email_petition'] == 1 ) {
@@ -229,14 +246,15 @@ function civicrm_petition_email_civicrm_postProcess( $formName, &$form ) {
       return;
     }
 
+    // TODO: Change from DB INSERT into API create
     $checkexisting = db_query("SELECT count(*) AS count FROM {civicrm_petition_email} WHERE petition_id = :survey_id", array(':survey_id' => $survey_id));
     $row = $checkexisting->fetchAssoc();
     if ($row['count']== 0) {
       $insert = db_query(
         "INSERT INTO {civicrm_petition_email} (petition_id, recipient_email, recipient_name, default_message, message_field, subject) VALUES ( :survey_id, :recipient, :recipient_name, :default_message, :user_message, :subjectline )", array(
-         ':survey_id' => $survey_id, 
-          ':recipient' =>  $form->_submitValues['recipient'], 
-          ':recipient_name' => $form->_submitValues['recipient_name'], 
+         ':survey_id' => $survey_id,
+          ':recipient' =>  $form->_submitValues['recipient'],
+          ':recipient_name' => $form->_submitValues['recipient_name'],
           ':default_message' =>  $form->_submitValues['default_message'],
           ':user_message' =>  intval($form->_submitValues['user_message']),
           ':subjectline' =>  $form->_submitValues['subjectline']
@@ -245,8 +263,8 @@ function civicrm_petition_email_civicrm_postProcess( $formName, &$form ) {
     } else {
       $insert = db_query(
         "UPDATE {civicrm_petition_email} SET recipient_email = :recipient, recipient_name = :recipient_name, default_message = :default_message, message_field = :message_field, subject = :subject WHERE petition_id = :survey_id", array(
-         ':recipient' =>  $form->_submitValues['recipient'], 
-         ':recipient_name' => $form->_submitValues['recipient_name'], 
+         ':recipient' =>  $form->_submitValues['recipient'],
+         ':recipient_name' => $form->_submitValues['recipient_name'],
          ':default_message' => $form->_submitValues['default_message'],
          ':message_field' => intval($form->_submitValues['user_message']),
          ':subject' => $form->_submitValues['subjectline'],
@@ -255,7 +273,7 @@ function civicrm_petition_email_civicrm_postProcess( $formName, &$form ) {
       );
     }
     if (!$insert) {
-      CRM_Core_Session::setStatus( ts('Could not save petition delivery information.') ); 
+      CRM_Core_Session::setStatus( ts('Could not save petition delivery information.') );
     }
   }
 }
@@ -270,13 +288,14 @@ function civicrm_petition_email_civicrm_post( $op, $objectName, $objectId, &$obj
       $profile_fields = $objectRef;
   }
 
+  // TODO: change from table to API
   if ($op == 'create' && $objectName == 'Activity') {
     require_once 'api/api.php';
     $petitiontype = civicrm_petition_email_get_petition_type();
     if ($objectRef->activity_type_id == $petitiontype) {
       $survey_id = $objectRef->source_record_id;
       $activity_id = $objectRef->id;
-      global $language;  
+      global $language;
       $sql = 'SELECT petition_id, recipient_email, recipient_name, default_message, message_field, subject FROM {civicrm_petition_email} WHERE petition_id = :survey_id';
       $params = array(':survey_id' => $survey_id);
       $result = db_query($sql, $params);
@@ -327,18 +346,19 @@ function civicrm_petition_email_civicrm_post( $op, $objectName, $objectId, &$obj
       catch (CiviCRM_API3_Exception $e) {
         // If there's an error, use default values for from address
         $domain = civicrm_api("Domain","get", array ('version' => '3','sequential' =>'1'));
-        if ($domain['is_error'] != 0 || !is_array($domain['values'])) { 
+        if ($domain['is_error'] != 0 || !is_array($domain['values'])) {
           // Can't send email without a from address.
-          return; 
+          return;
         }
         $value = array_pop($domain['values']);
         $from = '"' . $value['from_name'] . '"' . ' <' . $value['from_email'] . '>';
       }
 
       // Setup email message
-      $params = array( 
+      // TODO: change from drupal mail to Civi mail
+      $params = array(
         'subject' => $petition['subject'],
-        'message' => $petition_message, 
+        'message' => $petition_message,
       );
       $success = drupal_mail('civicrm_petition_email', 'signature', $to, $language, $params, $from);
       if($success['result']) {
@@ -349,15 +369,17 @@ function civicrm_petition_email_civicrm_post( $op, $objectName, $objectId, &$obj
     }
   }
 }
- 
+
 function civicrm_petition_email_mail($key, &$message, $params) {
   $message['subject'] = $params['subject'];
   $message['body'][] = $params['message'];
-} 
+}
 
 function civicrm_petition_email_get_petition_type() {
   $petitiontype = variable_get('civicrm_petition_email_petitiontype', false);
-  
+
+
+  // TODO: probably not needed, can use survey get
   if (!$petitiontype) { // Go figure out and set the activity type id
     $acttypegroup = civicrm_api("OptionGroup","getsingle", array('version' => '3','sequential' =>'1', 'name' =>'activity_type'));
     if ($acttypegroup['id'] && !$acttypegroup['is_error']) {
@@ -368,6 +390,6 @@ function civicrm_petition_email_get_petition_type() {
       }
     }
   }
-    
+
   return $petitiontype;
 }
