@@ -123,280 +123,73 @@ function lettertowho_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
 }
 
 /**
- * Functions below this ship commented out. Uncomment as required.
+ * Find the custom fields.
  *
-
-/**
- * Implements hook_civicrm_preProcess().
+ * @param string $field
+ *   The field you're looking for.
  *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_preProcess
- *
-function lettertowho_civicrm_preProcess($formName, &$form) {
-
-}
+ * @return string
+ *   The field name for API purposes like "custom_123".
  */
-// This function gets the custome fields, usualy called custom_NUM, and renames them to custom_field_name -NM
-function getCustomGroup() {
-  if (empty(static::$customGroup)) {
-    $params = array(
-      'extends' => 'Survey',
-      'is_active' => 1,
-      'name' => static::letter_to,
-      'return' => array('id', 'table_name'),
+function lettertowho_findField($field = NULL) {
+  try {
+    $fieldParams = array(
+      'custom_group_id' => "letter_to",
+      'sequential' => 1,
     );
-    static::$customGroup = civicrm_api3('CustomGroup', 'getsingle', $params);
-    unset(static::$customGroup['extends']);
-    unset(static::$customGroup['is_active']);
-    unset(static::$customGroup['name']);
-  }
-  return static::$customGroup;
-}
-
-function getCustomFields() {
-  if (empty(static::$customFields)) {
-    $custom_group = static::getCustomGroup();
-    $params = array(
-      'custom_group_id' => $custom_group['id'],
-      'is_active' => 1,
-      'return' => array('id', 'column_name', 'name', 'data_type'),
-    );
-    $fields = civicrm_api3('CustomField', 'get', $params);
-    if (CRM_Utils_Array::value('count', $fields) < 1) {
-      CRM_Core_Error::fatal('Custom fields appear to be missing (custom field group' . static::letter_to . ').');
+    if ($field) {
+      $fieldParams['name'] = $field;
     }
-    foreach ($fields['values'] as $field) {
-      static::$customFields[strtolower($field['name'])] = array(
-        'id' => $field['id'],
-        'column_name' => $field['column_name'],
-        'custom_n' => 'custom_' . $field['id'],
-        'data_type' => $field['data_type'],
-      );
+    $result = civicrm_api3('CustomField', 'get', $fieldParams);
+    if (!empty($result['values'][0]) && $field) {
+      return "custom_{$result['values'][0]['id']}";
+    }
+    elseif (!empty($result['values'])) {
+      $fields = array();
+      foreach ($result['values'] as $f) {
+        $fields[$f['name']] = "custom_{$f['id']}";
+      }
+      return $fields;
     }
   }
-  return static::$customFields;
+  catch (CiviCRM_API3_Exception $e) {
+    $error = $e->getMessage();
+    CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.lettertowho')));
+  }
 }
 
-function civicrm_petition_email_civicrm_config(&$config) {
-  // Include our templates directory.
-  $template_dir = dirname(__FILE__) .
-    DIRECTORY_SEPARATOR . 'templates';
-
-  $template =& CRM_Core_Smarty::singleton();
-  array_unshift($template->template_dir, $template_dir);
-}
 function civicrm_petition_email_civicrm_buildForm($formName, &$form) {
-  if ($formName == 'CRM_Campaign_Form_Petition_Signature') {
-    $survey_id = $form->getVar('_surveyId');
-    if ($survey_id) {
-      // TODO: This was the old sql query, not sure if I got the API call correct:  -NM $petitionemailval = db_query('SELECT petition_id, recipient_email, recipient_name, default_message, message_field, subject FROM {civicrm_petition_email} WHERE petition_id = :survey_id', array(':survey_id' => $survey_id));
-      $petitionemailval = civicrm_api('Survey', 'get', array(
-        'version' => '3',
-        'sequential' => 1,
-      ));
-      foreach ($petitionemailval as $petitioninfo) {
+  switch ($formName) {
+    case 'CRM_Campaign_Form_Petition_Signature':
+      $survey_id = $form->getVar('_surveyId');
+      if (!empty($survey_id)) {
+        list($fields, $petitionemailval) = lettertowho_getFieldsData($survey_id);
+
+        // If somehow the survey custom fields weren't found:
+        if (empty($fields['Message_Field']) || empty($fields['Default_Message'])) {
+          return;
+        }
+
         $defaults = $form->getVar('_defaults');
-        $messagefield = 'custom_' . $petitioninfo->message_field;
         foreach ($form->_elements as $element) {
-          if ($element->_attributes['name'] == $messagefield) {
-            $element->_value = $petitioninfo->custom_default_message;
+          if ($element->_attributes['name'] == $fields['Message_Field']) {
+            $element->_value = CRM_Utils_Array::value($fields['Default_Message'], $petitionemailval);
           }
         }
-        $defaults[$messagefield] = $form->_defaultValues[$messagefield] = $petitioninfo->custom_default_message;
+        $defaults[$messagefield] = $form->_defaultValues[$messagefield] = CRM_Utils_Array::value($fields['Default_Message'], $petitionemailval);
         $form->setVar('_defaults', $defaults);
-        break;
       }
-    }
-  }
-
-  if ($formName != 'CRM_Campaign_Form_Petition') {
-    return;
-  }
-  $survey_id = $form->getVar('_surveyId');
-  if ($survey_id) {
-    // TODO: Change from database query to API call - This was the old sql query, not sure if I got the API call correct -NM
-    // $petitionemailval = db_query('SELECT petition_id, recipient_email, recipient_name, default_message, message_field, subject FROM {civicrm_petition_email} WHERE petition_id = :survey_id', array(':survey_id' => $survey_id));
-    $petitionemailval = civicrm_api('Survey', 'get', array(
-      'version' => '3',
-      'sequential' => 1,
-      "survey_id" => $survey_id
-    ));
-    foreach ($petitionemailval as $petitioninfo) {
-      $form->_defaultValues['email_petition'] = 1;
-      $form->_defaultValues['custom_recipient_name'] = $petitioninfo->recipient_name;
-      $form->_defaultValues['recipient'] = $petitioninfo->recipient_email;
-      $form->_defaultValues['custom_default_message'] = $petitioninfo->default_message;
-      $form->_defaultValues['user_message'] = $petitioninfo->message_field;
-      $form->_defaultValues['subjectline'] = $petitioninfo->subject;
       break;
-    }
-  }
-  $form->add('checkbox', 'email_petition', ts('Send an email to a target'));
-  $form->add('text', 'custom_recipient_name', ts('Recipient\'s Name'));
-  $form->add('text', 'recipient', ts('Recipient\'s Email'));
-  $validcustomgroups = array();
 
-  // Get the Profiles in use by this petition so we can find out
-  // if there are any potential fields for an extra message to the
-  // petition target.
-  $params = array('version' => '3', 'module' => 'CiviCampaign', 'entity_table' => 'civicrm_survey', 'entity_id' => $survey_id);
-  $join_results = civicrm_api('UFJoin', 'get', $params);
-  $custom_fields = array();
-  if ($join_results['is_error'] == 0) {
-    foreach ($join_results['values'] as $join_value) {
-      $uf_group_id = $join_value['uf_group_id'];
-
-      // Now get all fields in this profile
-      $params = array('version' => 3, 'uf_group_id' => $uf_group_id);
-      $field_results = civicrm_api('UFField', 'get', $params);
-      if ($field_results['is_error'] == 0) {
-        foreach ($field_results['values'] as $field_value) {
-          $field_name = $field_value['field_name'];
-          // TODO: since on install this field will be created, have it look for that field specifically -NM
-          if (!preg_match('/^custom_[0-9]+/', $field_name)) {
-            // We only know how to lookup field types for custom
-            // fields. Skip core fields.
-            continue;
-          }
-
-          $id = substr(strrchr($field_name, '_'), 1);
-          // Finally, see if this is a text or textarea field.
-          $params = array('version' => 3, 'id' => $id);
-          $custom_results = civicrm_api('CustomField', 'get', $params);
-          if ($custom_results['is_error'] == 0) {
-            $field_value = array_pop($custom_results['values']);
-            $html_type = $field_value['html_type'];
-            $label = $field_value['label'];
-            $id = $field_value['id'];
-            if ($html_type == 'Text' || $html_type == 'TextArea') {
-              $custom_fields[$id] = $label;
-            }
-          }
-        }
-      }
-    }
-  }
-  $custom_message_field_options = array();
-  if (count($custom_fields) == 0) {
-    $custom_message_field_options = array('' => t('- No Text or TextArea fields defined in your profiles -'));
-  }
-  else {
-    $custom_message_field_options = array('' => t('- Select -'));
-    $custom_message_field_options = $custom_message_field_options + $custom_fields;
-  }
-  $form->add('select', 'user_message', ts('Custom Message Field'), $custom_message_field_options);
-  $form->add('textarea', 'custom_default_message', ts('Default Message'));
-  $form->add('text', 'subjectline', ts('Email Subject Line'));
-}
-
-function civicrm_petition_email_civicrm_alterContent(&$content, $context, $tplName, &$object) {
-  if ($tplName == 'CRM/Campaign/Form/Petition.tpl') {
-    $rendererval = $object->getVar('_renderer');
-    $action = $object->getVar('_action');
-    if ($action == 8) {
-      return;
-    }
-
-    //insert the field before is_active -NM
-    // Here I was using smarty instead of the hard coded JS and HTML that was in the drupal extension. I am setting up the smarty here, not sure if I got the fields correct -NM
-    $smarty = new Smarty;
-    $smarty->assign('custom_default_message', $custom_default_message);
-    $smarty->assign('custom_recipient_name', $custom_recipient_name);
-    $smarty->assign('custom_recipient_email', $custom_recipient_email);
-    $smarty->assign('custom_subject', $custom_subject);
-    $smarty->assign('recipient', $recipient);
-    $insertpoint = strpos($content, '<tr class="crm-campaign-survey-form-block-is_active">');
-    $help_code = "<a class=\"helpicon\" onclick=\"CRM.help('Petition Email', {'id':'id-email-petition','file':'CRM\/Campaign\/Form\/Petition'}); return false;\" href=\"#\" title=\"Petition Email Help\"></a>";
-    $content1 = substr($content, 0, $insertpoint);
-    $content3 = substr($content, $insertpoint);
-    $content2 = $smarty->display('petition_email_form.tpl');
-    $content4 = 'petition_email_form.js'; // TODO: I don't think it's pulling in this JS, need to figure out how to get the JS file (petition_email_form.js) into content4 -NM
-
-    $content = $content1 . $content2 . $content3 . $content4;
+    case 'CRM_Campaign_Form_Petition':
+      // TODO: add js for picking message field.
   }
 }
 
 /**
- * TODO: change from using table to making an API call -NM
+ * Implements hook_civicrm_post().
  */
-function civicrm_petition_email_civicrm_postProcess($formName, &$form) {
-  if ($formName != 'CRM_Campaign_Form_Petition') {
-    return;
-  }
-  if ($form->_submitValues['email_petition'] == 1) {
-    require_once 'api/api.php';
-    $survey_id = $form->getVar('_surveyId');
-    $lastmoddate = 0;
-    if (!$survey_id) {// Ugly hack because the form doesn't return the id
-      $surveys = civicrm_api("Survey", "get", array('version' => '3', 'sequential' => '1', 'title' => $form->_submitValues['title']));
-      if (is_array($surveys['values'])) {
-        foreach ($surveys['values'] as $survey) {
-          if ($lastmoddate > strtotime($survey['last_modified_date'])) {
-            continue;
-          }
-          $lastmoddate = strtotime($survey['last_modified_date']);
-          $survey_id = $survey['id'];
-        }
-      }
-    }
-    if (!$survey_id) {
-      CRM_Core_Session::setStatus(ts('Cannot find the petition for saving email delivery fields.'));
-      return;
-    }
-
-    // TODO: Change from DB INSERT into API create -NM
-    // $checkexisting = db_query("SELECT count(*) AS count FROM {civicrm_petition_email} WHERE petition_id = :survey_id", array(':survey_id' => $survey_id));
-    $checkexisting = civicrm_api('Survey', 'get', array(
-      'version' => '3',
-      'sequential' => 1,
-      "custom_subject" => "",
-      "custom_default_message" => "",
-      "custom_recipient_name" => '',
-      "custom_recipient_email" => "",
-      "petition_id" => "",
-      "survey_id" => "",
-    ));
-    $row = $checkexisting->fetchAssoc(); // TODO: Commented this out as it's for updating and the API does this through create -NM
-    // if ($row['count'] == 0) {
-      // $insert = db_query(
-      //   "INSERT INTO {civicrm_petition_email} (petition_id, recipient_email, recipient_name, default_message, message_field, subject) VALUES ( :survey_id, :recipient, :recipient_name, :default_message, :user_message, :subjectline )", array(
-      //     ':survey_id' => $survey_id,
-      //     ':recipient' => $form->_submitValues['recipient'],
-      //     ':recipient_name' => $form->_submitValues['recipient_name'],
-      //     ':default_message' => $form->_submitValues['default_message'],
-      //     ':user_message' => intval($form->_submitValues['user_message']),
-      //     ':subjectline' => $form->_submitValues['subjectline'],
-      //   )
-      // );
-      $insert = civicrm_api('Survey', 'create', array(
-        ':survey_id' => $survey_id,
-        ':recipient' => $form->_submitValues['recipient'],
-        ':custom_recipient_name' => $form->_submitValues['recipient_name'],
-        ':custom_default_message' => $form->_submitValues['default_message'],
-        ':user_message' => intval($form->_submitValues['user_message']),
-        ':subjectline' => $form->_submitValues['subjectline'],
-      ));
-    // }
-    // TODO: Again, commenting this out as it's to UPDATE and the API does this through CREATE -NM
-    // else {
-      // $insert = db_query(
-      //   "UPDATE {civicrm_petition_email} SET recipient_email = :recipient, recipient_name = :recipient_name, default_message = :default_message, message_field = :message_field, subject = :subject WHERE petition_id = :survey_id", array(
-      //     ':recipient' => $form->_submitValues['recipient'],
-      //     ':recipient_name' => $form->_submitValues['recipient_name'],
-      //     ':default_message' => $form->_submitValues['default_message'],
-      //     ':message_field' => intval($form->_submitValues['user_message']),
-      //     ':subject' => $form->_submitValues['subjectline'],
-      //     ':survey_id' => $survey_id,
-      //   )
-      // );
-
-    // }
-    if (!$insert) {
-      CRM_Core_Session::setStatus(ts('Could not save petition delivery information.'));
-    }
-  }
-}
-
-function civicrm_petition_email_civicrm_post($op, $objectName, $objectId, &$objectRef) {
+function lettertowho_civicrm_post($op, $objectName, $objectId, &$objectRef) {
   static $profile_fields = NULL;
   if ($objectName == 'Profile' && is_array($objectRef)) {
     // This seems like broad criteria to be hanging on to a static array, however,
@@ -522,4 +315,40 @@ function civicrm_petition_email_get_petition_type() {
   }
 
   return $petitiontype;
+}
+
+/**
+ * Get the fields and survey data.
+ *
+ * @param int $survey_id
+ *   The ID of the petition.
+ *
+ * @return array
+ *   The fields array and the survey info.
+ */
+function lettertowho_getFieldsData($survey_id) {
+  // Get the field IDs for the standard fields:
+  $fields = lettertowho_findField();
+
+  // If somehow the survey custom fields weren't found:
+  if (empty($fields['Message_Field']) || empty($fields['Default_Message'])) {
+    return array($fields);
+  }
+
+  try {
+    $surveyParams = array(
+      'id' => $survey_id,
+      'return' => array_values($fields),
+    );
+    $petitionemailval = civicrm_api3('Survey', 'getsingle', $surveyParams);
+  }
+  catch (CiviCRM_API3_Exception $e) {
+    $error = $e->getMessage();
+    CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.lettertowho')));
+    return array($fields);
+  }
+  return array(
+    $fields,
+    $petitionemailval,
+  );
 }
