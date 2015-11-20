@@ -110,7 +110,7 @@ function lettertowho_civicrm_caseTypes(&$caseTypes) {
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_caseTypes
  */
 function lettertowho_civicrm_angularModules(&$angularModules) {
-_lettertowho_civix_civicrm_angularModules($angularModules);
+  _lettertowho_civix_civicrm_angularModules($angularModules);
 }
 
 /**
@@ -158,7 +158,10 @@ function lettertowho_findField($field = NULL) {
   }
 }
 
-function civicrm_petition_email_civicrm_buildForm($formName, &$form) {
+/**
+ * Implements hook_civicrm_buildForm().
+ */
+function lettertowho_civicrm_buildForm($formName, &$form) {
   switch ($formName) {
     case 'CRM_Campaign_Form_Petition_Signature':
       $survey_id = $form->getVar('_surveyId');
@@ -176,145 +179,154 @@ function civicrm_petition_email_civicrm_buildForm($formName, &$form) {
             $element->_value = CRM_Utils_Array::value($fields['Default_Message'], $petitionemailval);
           }
         }
-        $defaults[$messagefield] = $form->_defaultValues[$messagefield] = CRM_Utils_Array::value($fields['Default_Message'], $petitionemailval);
+        $defaults[$fields['Message_Field']] = $form->_defaultValues[$fields['Message_Field']] = CRM_Utils_Array::value($fields['Default_Message'], $petitionemailval);
         $form->setVar('_defaults', $defaults);
       }
       break;
 
     case 'CRM_Campaign_Form_Petition':
       // TODO: add js for picking message field.
+      // TODO: make sure it shows survey custom fields.
   }
 }
 
 /**
  * Implements hook_civicrm_post().
+ *
+ * TODO: Make sure custom fields are saved at this point: it may be that this
+ * needs to be attached to the postProcess.
  */
 function lettertowho_civicrm_post($op, $objectName, $objectId, &$objectRef) {
-  static $profile_fields = NULL;
-  if ($objectName == 'Profile' && is_array($objectRef)) {
-    // This seems like broad criteria to be hanging on to a static array, however,
-    // not sure how else to capture the input to be used in case this is a petition
-    // being signed that has a target. If you are anonymous, you have a source field in the
-    // array, but that is not there if you are logged in. Sigh.
-    $profile_fields = $objectRef;
-  }
-
-  // TODO: change from table to API
   if ($op == 'create' && $objectName == 'Activity') {
-    require_once 'api/api.php';
-    $petitiontype = civicrm_petition_email_get_petition_type();
-    if ($objectRef->activity_type_id == $petitiontype) {
-      $survey_id = $objectRef->source_record_id;
-      $activity_id = $objectRef->id;
-      global $language;
-      // TODO: SQL to API, here's old SQL, not sure if i got the API call correct -NM
-      // $sql = 'SELECT petition_id, recipient_email, recipient_name, default_message, message_field, subject FROM {civicrm_petition_email} WHERE petition_id = :survey_id';
-      $sql = civicrm_api('Survey', 'get', array(
-            'version' => '3',
-            'sequential' => 1,
-            "custom_subject" => "",
-            "custom_default_message" => "",
-            "custom_recipient_name" => '',
-            "custom_recipient_email" => "",
-            "petition_id" => "",
-            "survey_id" => "",
-          ));
-      $params = array(':survey_id' => $survey_id);
-      // TODO: Not sure how to proceed here, I'm a little confused by what this is supposed to be doing in the DB and not sure how to re-create it with API call -NM
-      $result = db_query($sql, $params);
-      $petition = $result->fetchAssoc();
-      if (empty($petition) || !array_key_exists('petition_id', $petition) || empty($petition['petition_id'])) {
-        // Must not be a petition with a target.
+    try {
+      $petitionTypeParams = array(
+        'name' => "activity_type",
+        'api.OptionValue.getsingle' => array(
+          'option_group_id' => '$value.id',
+          'name' => "Petition",
+          'options' => array('limit' => 1),
+        ),
+        'options' => array('limit' => 1),
+      );
+      $petitionTypeInfo = civicrm_api3('OptionGroup', 'getsingle', $petitionTypeParams);
+    }
+    catch (CiviCRM_API3_Exception $e) {
+      $error = $e->getMessage();
+      CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.lettertowho')));
+    }
+
+    if (empty($petitionTypeInfo['api.OptionValue.getsingle']['value'])
+      || $objectRef->activity_type_id != $petitionTypeInfo['api.OptionValue.getsingle']['value']) {
+      return;
+    }
+
+    $survey_id = $objectRef->source_record_id;
+    $activity_id = $objectRef->id;
+    list($fields, $petitionemailval) = lettertowho_getFieldsData($survey_id);
+
+    $neededFields = array(
+      'Sends_Email',
+      'Subject',
+      'Recipient_Name',
+      'Recipient_Email',
+      'Default_Message',
+      'Message_Field',
+    );
+
+    foreach ($neededFields as $neededField) {
+      if (empty($neededField) || empty($petitionemailval[$fields[$neededField]])) {
         return;
       }
+    }
 
-      // Set up variables for the email message
-      // Figure out whether to use the user-supplied message or the default message
-      $petition_message = NULL;
-      // If the petition has specified a message field, and we've encountered the profile post action....
-      if (!empty($petition['message_field']) && !is_null($profile_fields)) {
-        if (is_numeric($petition['message_field'])) {
-          $message_field = 'custom_' . $petition['message_field'];
-        }
-        else {
-          $message_field = $petition['message_field'];
-        }
-        // If the field is in the profile
-        if (array_key_exists($message_field, $profile_fields)) {
-          // If it's not empty...
-          if (!empty($profile_fields[$message_field])) {
-            $petition_message = $profile_fields[$message_field];
-          }
-        }
-      }
-      // No user supplied message, use the default
-      if (is_null($petition_message)) {
-        $petition_message = $petition['custom_default_message'];
-      }
-      $to = '"' . $petition['custom_recipient_name'] . '" <' . $petition['custom_recipient_email'] . '>';
+    $messageField = 'custom_' . intval($petitionemailval[$fields['Message_Field']]);
 
-      // Figure out the user id that created this activity so we can set the from address
-      $from = NULL;
-
-      // Get the record_type_id for Source Activity records.
-      $activity_contacts = CRM_Core_OptionGroup::values('activity_contacts', FALSE, FALSE, FALSE, NULL, 'name');
-      $source_id   = CRM_Utils_Array::key('Activity Source', $activity_contacts);
-
-      // Get the source contact for this activity
-      $params = array('activity_id' => $objectRef->id, 'record_type_id' => $source_id);
-      try{
-        $value = civicrm_api3("Contact", "getsingle", $params);
-        $from = $value['display_name'] . ' <' . $value['email'] . '>';
-      }
-      catch (CiviCRM_API3_Exception $e) {
-        // If there's an error, use default values for from address
-        $domain = civicrm_api("Domain", "get", array('version' => '3', 'sequential' => '1'));
-        if ($domain['is_error'] != 0 || !is_array($domain['values'])) {
-          // Can't send email without a from address.
-          return;
-        }
-        $value = array_pop($domain['values']);
-        $from = '"' . $value['from_name'] . '"' . ' <' . $value['from_email'] . '>';
-      }
-
-      // Setup email message
-      // TODO: change from drupal mail to Civi mail -NM
-      $params = array(
-        'subject' => $petition['subject'],
-        'message' => $petition_message,
+    // Get custom message value.
+    try {
+      $sourceTypeParams = array(
+        'name' => "activity_contacts",
+        'options' => array('limit' => 1),
+        'api.OptionValue.getsingle' => array(
+          'option_group_id' => '$value.id',
+          'name' => "Activity Source",
+          'options' => array('limit' => 1),
+        ),
       );
-      $success = drupal_mail('civicrm_petition_email', 'signature', $to, $language, $params, $from);
-      if ($success['result']) {
-        CRM_Core_Session::setStatus(ts('Message sent successfully to') . " $to");
+      $sourceTypeInfo = civicrm_api3('OptionGroup', 'getsingle', $sourceTypeParams);
+
+      $sourceRecordType = empty($sourceTypeInfo['api.OptionValue.getsingle']['value']) ? 2 : $sourceTypeInfo['api.OptionValue.getsingle']['value'];
+
+      $signatureParams = array(
+        'id' => $activity_id,
+        'api.ActivityContact.getsingle' => array(
+          'record_type_id' => $sourceRecordType,
+          'options' => array('limit' => 1),
+          'api.Contact.getsingle' => array(
+            'return' => array(
+              'display_name',
+              'email',
+            ),
+          ),
+        ),
+        'return' => array(
+          $messageField,
+        ),
+      );
+      $signature = civicrm_api3('Activity', 'getsingle', $signatureParams);
+    }
+    catch (CiviCRM_API3_Exception $e) {
+      $error = $e->getMessage();
+      CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.lettertowho')));
+    }
+
+    $petitionMessage = empty($signature[$messageField]) ? CRM_Utils_Array::value($fields['Default_Message'], $petitionemailval) : $signature[$messageField];
+
+    if (empty($signature['api.ActivityContact.getsingle']['api.Contact.getsingle']['email'])) {
+      // TODO: Get default from address.
+      $defaultMailParams = array(
+        'name' => "from_email_address",
+        'options' => array('limit' => 1),
+        'api.OptionValue.getsingle' => array(
+          'is_default' => 1,
+          'options' => array('limit' => 1),
+        ),
+      );
+      $defaultMail = civicrm_api3('OptionGroup', 'getsingle', $defaultMailParams);
+      if (empty($defaultMail['api.OptionValue.getsingle']['label'])
+        || $defaultMail['api.OptionValue.getsingle']['label'] == $defaultMail['api.OptionValue.getsingle']['name']) {
+        // No site email.
+        // TODO: leave some kind of message with explanation.
+        return;
       }
-      else {
-        CRM_Core_Session::setStatus(ts('Error sending message to') . " $to");
-      }
+      $from = $defaultMail['api.OptionValue.getsingle']['label'];
+    }
+    elseif (empty($signature['api.ActivityContact.getsingle']['api.Contact.getsingle']['display_name'])) {
+      $from = $signature['api.ActivityContact.getsingle']['api.Contact.getsingle']['email'];
+    }
+    else {
+      $from = "\"{$signature['api.ActivityContact.getsingle']['api.Contact.getsingle']['display_name']}\" <{$signature['api.ActivityContact.getsingle']['api.Contact.getsingle']['email']}>";
+    }
+
+    // Setup email message:
+    $mailParams = array(
+      'groupName' => 'Activity Email Sender',
+      'from' => $from,
+      'toName' => $petitionemailval[$fields['Recipient_Name']],
+      'toEmail' => $petitionemailval[$fields['Recipient_Email']],
+      'subject' => $petitionemailval[$fields['Subject']],
+      // 'cc' => $cc, TODO: offer option to CC.
+      // 'bcc' => $bcc,
+      'text' => $petitionMessage,
+      // 'html' => $html_message, TODO: offer HTML option.
+    );
+
+    if (!CRM_Utils_Mail::send($mailParams)) {
+      CRM_Core_Session::setStatus(ts('Error sending message to %1', array('domain' => 'com.aghstrategies.lettertowho', 1 => $mailParams['toName'])));
+    }
+    else {
+      CRM_Core_Session::setStatus(ts('Message sent successfully to %1', array('domain' => 'com.aghstrategies.lettertowho', 1 => $mailParams['toName'])));
     }
   }
-}
-
-function civicrm_petition_email_mail($key, &$message, $params) {
-  $message['subject'] = $params['subject'];
-  $message['body'][] = $params['message'];
-}
-
-function civicrm_petition_email_get_petition_type() {
-  $petitiontype = variable_get('civicrm_petition_email_petitiontype', FALSE);
-
-  // TODO: probably not needed, can use survey get -NM
-  if (!$petitiontype) {// Go figure out and set the activity type id
-    $acttypegroup = civicrm_api("OptionGroup", "getsingle", array('version' => '3', 'sequential' => '1', 'name' => 'activity_type'));
-    if ($acttypegroup['id'] && !$acttypegroup['is_error']) {
-      $acttype = civicrm_api("OptionValue", "getsingle", array('version' => '3', 'sequential' => '1', 'option_group_id' => $acttypegroup['id'], 'name' => 'Petition'));
-      if ($acttype['id'] && !$acttype['is_error']) {
-        $petitiontype = $acttype['value'];
-        variable_set('civicrm_petition_email_petitiontype', $acttype['value']);
-      }
-    }
-  }
-
-  return $petitiontype;
 }
 
 /**
