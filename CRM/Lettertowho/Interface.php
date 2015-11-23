@@ -129,6 +129,10 @@ class CRM_Lettertowho_Interface {
    */
   public function getSourceRecordType() {
     if (empty($this->sourceRecordType)) {
+      $cache = CRM_Utils_Cache::singleton();
+      $this->sourceRecordType = $cache->get('lettertowho_sourceRecordType');
+    }
+    if (empty($this->sourceRecordType)) {
       try {
         $sourceTypeParams = array(
           'name' => "activity_contacts",
@@ -141,7 +145,13 @@ class CRM_Lettertowho_Interface {
         );
         $sourceTypeInfo = civicrm_api3('OptionGroup', 'getsingle', $sourceTypeParams);
 
-        $this->sourceRecordType = empty($sourceTypeInfo['api.OptionValue.getsingle']['value']) ? 2 : $sourceTypeInfo['api.OptionValue.getsingle']['value'];
+        if (empty($sourceTypeInfo['api.OptionValue.getsingle']['value'])) {
+          $this->sourceRecordType = 2;
+        }
+        else {
+          $this->sourceRecordType = $sourceTypeInfo['api.OptionValue.getsingle']['value'];
+          $cache->set('lettertowho_sourceRecordType', $this->sourceRecordType);
+        }
       }
       catch (CiviCRM_API3_Exception $e) {
         $error = $e->getMessage();
@@ -160,6 +170,10 @@ class CRM_Lettertowho_Interface {
    */
   public function getDefaultFromAddress() {
     if (empty($this->defaultFromAddress) {
+      $cache = CRM_Utils_Cache::singleton();
+      $this->defaultFromAddress = $cache->get('lettertowho_defaultFromAddress');
+    }
+    if (empty($this->defaultFromAddress)) {
       try {
         $defaultMailParams = array(
           'name' => "from_email_address",
@@ -177,6 +191,7 @@ class CRM_Lettertowho_Interface {
           return NULL;
         }
         $this->defaultFromAddress = $defaultMail['api.OptionValue.getsingle']['label'];
+        $cache->set('lettertowho_defaultFromAddress', $this->defaultFromAddress);
       }
       catch (CiviCRM_API3_Exception $e) {
         $error = $e->getMessage();
