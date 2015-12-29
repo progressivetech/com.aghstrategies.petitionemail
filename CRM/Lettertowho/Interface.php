@@ -20,28 +20,28 @@ class CRM_Lettertowho_Interface {
    *
    * @type int
    */
-  private $sourceRecordType = NULL;
+  protected $sourceRecordType = NULL;
 
   /**
    * Fields in extension's custom data set.
    *
    * @type array
    */
-  private $fields = array();
+  protected $fields = array();
 
   /**
    * The default "from" address for the site.
    *
    * @type string
    */
-  private $defaultFromAddress = NULL;
+  protected $defaultFromAddress = NULL;
 
   /**
    * The values for the given survey.
    *
    * @type array
    */
-  private $petitionEmailVal = array();
+  protected $petitionEmailVal = array();
 
   /**
    * The fields that are required to run a signature of this type.
@@ -53,9 +53,24 @@ class CRM_Lettertowho_Interface {
     'Message_Field',
   );
 
-  public function __construct($survey_id) {
+  /**
+   * The ID of the petition using this interface.
+   *
+   * @type int
+   */
+  public $surveyId = NULL;
+
+  /**
+   * A flag that the system doesn't have the fields for this interface to work.
+   *
+   * @type boolean
+   */
+  public $isIncomplete = TRUE;
+
+  public function __construct($surveyId) {
+    $this->surveyId = $surveyId;
     $this->findFields();
-    $this->getFieldsData($survey_id);
+    $this->getFieldsData();
   }
 
   /**
@@ -90,20 +105,14 @@ class CRM_Lettertowho_Interface {
   /**
    * Get the survey data.
    *
-   * @param int $survey_id
-   *   The ID of the petition.
-   *
    * @return array
    *   The survey info.
    */
-  public function getFieldsData($survey_id) {
-    // Get the field IDs for the standard fields:
-    $fields = $this->findFields();
-
+  public function getFieldsData() {
     try {
       $surveyParams = array(
-        'id' => $survey_id,
-        'return' => array_values($fields),
+        'id' => $this->surveyId,
+        'return' => array_values($this->fields),
       );
       $this->petitionEmailVal = civicrm_api3('Survey', 'getsingle', $surveyParams);
     }
@@ -115,7 +124,6 @@ class CRM_Lettertowho_Interface {
   }
 
   public function petitionForm() {
-    return;
   }
 
   public function processSignature($activityId) {
@@ -169,7 +177,7 @@ class CRM_Lettertowho_Interface {
    *   The default "from" name and address.
    */
   public function getDefaultFromAddress() {
-    if (empty($this->defaultFromAddress) {
+    if (empty($this->defaultFromAddress)) {
       $cache = CRM_Utils_Cache::singleton();
       $this->defaultFromAddress = $cache->get('lettertowho_defaultFromAddress');
     }
@@ -199,6 +207,51 @@ class CRM_Lettertowho_Interface {
       }
     }
     return $this->defaultFromAddress;
+  }
+
+  /**
+   * Find the recipient interface for a petition.
+   *
+   * @param string $surveyId
+   *   The ID of the petition.
+   *
+   * @return string
+   *   The class of the interface, or false if not found.
+   */
+  public static function findInterface($surveyId) {
+    try {
+      $fieldId = civicrm_api3('CustomField', 'getvalue', array(
+        'return' => "id",
+        'name' => "Recipient_System",
+        'custom_group_id' => "Letter_To",
+      ));
+      $result = civicrm_api3('Survey', 'getvalue', array(
+        'return' => "custom_$fieldId",
+        'id' => $surveyId,
+      ));
+      if (!empty($result)) {
+        $class = "CRM_Lettertowho_Interface_$result";
+        if (class_exists($class)) {
+          return $class;
+        }
+      }
+    }
+    catch (CiviCRM_API3_Exception $e) {
+      $error = $e->getMessage();
+      CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.lettertowho')));
+    }
+
+    return FALSE;
+  }
+
+  /**
+   * Prepare the petition signature form.
+   *
+   * @param CRM_Campaign_Form_Petition_Signature $form
+   *   The form.
+   */
+  public function buildSigForm($form) {
+    // Process the form.
   }
 
 }

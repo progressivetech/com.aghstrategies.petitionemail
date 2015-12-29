@@ -17,7 +17,9 @@ class CRM_Lettertowho_Interface_Single extends CRM_Lettertowho_Interface {
    * @param int $survey_id
    *   The ID of the petition.
    */
-  public function __construct($survey_id) {
+  public function __construct($surveyId) {
+    parent::__construct($surveyId)
+
     $this->interfaceType = 'single';
 
     $this->neededFields[] = 'Sends_Email';
@@ -26,7 +28,7 @@ class CRM_Lettertowho_Interface_Single extends CRM_Lettertowho_Interface {
     $this->neededFields[] = 'Recipient_Email';
 
     $fields = $this->findFields();
-    $petitionemailval = $this->getFieldsData($survey_id);
+    $petitionemailval = $this->getFieldsData($surveyId);
 
     foreach ($this->neededFields as $neededField) {
       if (empty($fields[$neededField]) || empty($petitionemailval[$fields[$neededField]])) {
@@ -34,6 +36,8 @@ class CRM_Lettertowho_Interface_Single extends CRM_Lettertowho_Interface {
         return;
       }
     }
+    // If all needed fields are found, the system is no longer incomplete.
+    $this->isIncomplete = FALSE;
   }
 
   /**
@@ -106,6 +110,18 @@ class CRM_Lettertowho_Interface_Single extends CRM_Lettertowho_Interface {
     }
 
     parent::processSignature($activityId, $message);
+  }
+
+  public function buildSigForm($form) {
+    $defaults = $form->getVar('_defaults');
+
+    foreach ($form->_elements as $element) {
+      if ($element->_attributes['name'] == $this->fields['Message_Field']) {
+        $element->_value = CRM_Utils_Array::value($this->fields['Default_Message'], $this->petitionemailval);
+      }
+    }
+    $defaults[$this->fields['Message_Field']] = $form->_defaultValues[$this->fields['Message_Field']] = CRM_Utils_Array::value($this->fields['Default_Message'], $this->petitionemailval);
+    $form->setVar('_defaults', $defaults);
   }
 
 }

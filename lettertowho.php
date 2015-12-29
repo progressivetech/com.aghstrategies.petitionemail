@@ -131,12 +131,21 @@ function lettertowho_civicrm_buildForm($formName, &$form) {
     case 'CRM_Campaign_Form_Petition_Signature':
       $survey_id = $form->getVar('_surveyId');
       if (!empty($survey_id)) {
-        list($fields, $petitionemailval) = lettertowho_getFieldsData($survey_id);
-
-        // If somehow the survey custom fields weren't found:
-        if (empty($fields['Message_Field']) || empty($fields['Default_Message'])) {
+        // Find the interface for this petition.
+        $class = CRM_Lettertowho_Interface::findInterface($survey_id);
+        if ($class === FALSE) {
           return;
         }
+        $interface = new $class($survey_id);
+
+        // Make sure all the necessary fields are present.
+        if ($interface->isIncomplete) {
+          return;
+        }
+
+        $interface->buildSigForm($form);
+
+        list($fields, $petitionemailval) = lettertowho_getFieldsData($survey_id);
 
         $defaults = $form->getVar('_defaults');
         foreach ($form->_elements as $element) {
