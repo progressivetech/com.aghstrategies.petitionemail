@@ -151,6 +151,7 @@ function lettertowho_civicrm_buildForm($formName, &$form) {
 
     case 'CRM_Campaign_Form_Petition':
       // TODO: add js for picking message field.
+      CRM_Core_Resources::singleton()->addScriptFile('com.aghstrategies.lettertowho', 'js/messageField.js');
       // TODO: make sure it shows survey custom fields.
   }
 }
@@ -195,7 +196,7 @@ function _lettertowho_getPetitionActivityType() {
       $error = $e->getMessage();
       CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.lettertowho')));
     }
-    if (empty($petitionTypeInfo['api.OptionValue.getsingle']['value']) {
+    if (empty($petitionTypeInfo['api.OptionValue.getsingle']['value'])) {
       return;
     }
     else {
