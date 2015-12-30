@@ -20,9 +20,6 @@ class CRM_Petitionemail_Interface_Single extends CRM_Petitionemail_Interface {
   public function __construct($surveyId) {
     parent::__construct($surveyId);
 
-    $this->interfaceType = 'single';
-
-    $this->neededFields[] = 'Sends_Email';
     $this->neededFields[] = 'Subject';
     $this->neededFields[] = 'Recipient_Name';
     $this->neededFields[] = 'Recipient_Email';

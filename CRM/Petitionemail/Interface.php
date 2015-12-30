@@ -8,12 +8,6 @@
  * The base class for petition delivery interfaces.
  */
 class CRM_Petitionemail_Interface {
-  /**
-   * What kind of interface this is.
-   *
-   * @type string
-   */
-  public $interfaceType = NULL;
 
   /**
    * Value of the record_type_id for activity source contacts.

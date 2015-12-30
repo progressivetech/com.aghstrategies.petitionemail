@@ -17,30 +17,15 @@
   </CustomGroups>
   <CustomFields>
     <CustomField>
-      <name>Sends_Email</name>
-      <label>Sends Email</label>
-      <data_type>Boolean</data_type>
-      <html_type>Radio</html_type>
-      <is_required>0</is_required>
-      <is_searchable>1</is_searchable>
-      <is_search_range>0</is_search_range>
-      <weight>0</weight>
-      <help_post>Select if this petition sends mail</help_post>
-      <is_active>1</is_active>
-      <is_view>0</is_view>
-      <in_selector>0</in_selector>
-      <column_name>letter_to_sends_email</column_name>
-      <custom_group_name>Letter_To</custom_group_name>
-    </CustomField>
-    <CustomField>
       <name>Recipient_System</name>
-      <label>Recipient System</label>
+      <label>Email Recipient System</label>
       <data_type>String</data_type>
       <html_type>Select</html_type>
       <is_required>0</is_required>
       <is_searchable>0</is_searchable>
       <is_search_range>0</is_search_range>
       <weight>1</weight>
+      <help_post>Select a system for sending emails to decision-makers or the press from this petition.</help_post>
       <is_active>1</is_active>
       <is_view>0</is_view>
       <text_length>255</text_length>
