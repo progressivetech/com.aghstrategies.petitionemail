@@ -4,7 +4,7 @@
  * Utilities for petition emails.
  */
 
-class CRM_Lettertowho_Utils {
+class CRM_Petitionemail_Utils {
   /**
    * Find the activity type ID for petitions.
    *
@@ -13,7 +13,7 @@ class CRM_Lettertowho_Utils {
    */
   public static function getPetitionActivityType() {
     $cache = CRM_Utils_Cache::singleton();
-    $petitionActivityType = $cache->get('lettertowho_petitionActivityType');
+    $petitionActivityType = $cache->get('petitionemail_petitionActivityType');
     if (empty($petitionActivityType)) {
       try {
         $petitionTypeParams = array(
@@ -29,14 +29,14 @@ class CRM_Lettertowho_Utils {
       }
       catch (CiviCRM_API3_Exception $e) {
         $error = $e->getMessage();
-        CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.lettertowho')));
+        CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.petitionemail')));
       }
       if (empty($petitionTypeInfo['api.OptionValue.getsingle']['value'])) {
         return;
       }
       else {
         $petitionActivityType = $petitionTypeInfo['api.OptionValue.getsingle']['value'];
-        $cache->set('lettertowho_petitionActivityType', $petitionActivityType);
+        $cache->set('petitionemail_petitionActivityType', $petitionActivityType);
       }
     }
     return $petitionActivityType;

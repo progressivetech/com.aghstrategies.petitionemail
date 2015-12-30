@@ -1,5 +1,5 @@
-Package: com.aghstrategies.lettertowho
-Copyright (C) 2015, Nikki Murray <nikki.liz.murray@gmail.com>
+Package: com.aghstrategies.petitionemail
+Copyright (C) 2015, AGH Strategies, LLC <info@aghstrategies.com>
 Licensed under the GNU Affero Public License 3.0 (below).
 
 -------------------------------------------------------------------------------

@@ -1,24 +1,24 @@
 <?xml version="1.0"?>
-<extension key="com.aghstrategies.lettertowho" type="module">
-  <file>lettertowho</file>
-  <name>letter to who</name>
-  <description>extension that should allow the creation of a letter to the editor or letter to legislator, originally a drupal model and now being ported to a civi extension</description>
+<extension key="com.aghstrategies.petitionemail" type="module">
+  <file>petitionemail</file>
+  <name>CiviCRM Petition Email</name>
+  <description>Email petition signatures to a selected recipient.  Additionally, provide a framework for additional methods for delivering petition signatures.</description>
   <license>AGPL-3.0</license>
   <maintainer>
-    <author>Nikki Murray</author>
-    <email>nikki@aghstrategies.com</email>
+    <author>Andrew Hunt</author>
+    <email>andrew@aghstrategies.com</email>
   </maintainer>
   <urls>
     <url desc="Licensing">http://www.gnu.org/licenses/agpl-3.0.html</url>
   </urls>
-  <releaseDate>2015-10-16</releaseDate>
+  <releaseDate>2015-12-30</releaseDate>
   <version>1.0</version>
-  <develStage>alpha</develStage>
+  <develStage>beta</develStage>
   <compatibility>
-    <ver>4.2</ver>
+    <ver>4.6</ver>
+    <ver>4.7</ver>
   </compatibility>
-  <comments>This is a new, undeveloped module</comments>
   <civix>
-    <namespace>CRM/Lettertowho</namespace>
+    <namespace>CRM/Petitionemail</namespace>
   </civix>
 </extension>

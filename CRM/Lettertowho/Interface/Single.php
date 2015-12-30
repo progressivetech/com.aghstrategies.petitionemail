@@ -7,9 +7,9 @@
 /**
  * An interface to send a single email.
  *
- * @extends CRM_Lettertowho_Interface
+ * @extends CRM_Petitionemail_Interface
  */
-class CRM_Lettertowho_Interface_Single extends CRM_Lettertowho_Interface {
+class CRM_Petitionemail_Interface_Single extends CRM_Petitionemail_Interface {
 
   /**
    * Instantiate the delivery interface.
@@ -66,7 +66,7 @@ class CRM_Lettertowho_Interface_Single extends CRM_Lettertowho_Interface {
     }
     catch (CiviCRM_API3_Exception $e) {
       $error = $e->getMessage();
-      CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.lettertowho')));
+      CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.petitionemail')));
     }
 
     if (empty($contact['email'])) {
@@ -93,10 +93,10 @@ class CRM_Lettertowho_Interface_Single extends CRM_Lettertowho_Interface {
     );
 
     if (!CRM_Utils_Mail::send($mailParams)) {
-      CRM_Core_Session::setStatus(ts('Error sending message to %1', array('domain' => 'com.aghstrategies.lettertowho', 1 => $mailParams['toName'])));
+      CRM_Core_Session::setStatus(ts('Error sending message to %1', array('domain' => 'com.aghstrategies.petitionemail', 1 => $mailParams['toName'])));
     }
     else {
-      CRM_Core_Session::setStatus(ts('Message sent successfully to %1', array('domain' => 'com.aghstrategies.lettertowho', 1 => $mailParams['toName'])));
+      CRM_Core_Session::setStatus(ts('Message sent successfully to %1', array('domain' => 'com.aghstrategies.petitionemail', 1 => $mailParams['toName'])));
     }
     parent::processSignature($form);
   }

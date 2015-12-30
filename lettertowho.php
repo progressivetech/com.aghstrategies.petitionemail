@@ -1,14 +1,14 @@
 <?php
 
-require_once 'lettertowho.civix.php';
+require_once 'petitionemail.civix.php';
 
 /**
  * Implements hook_civicrm_config().
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_config
  */
-function lettertowho_civicrm_config(&$config) {
-  _lettertowho_civix_civicrm_config($config);
+function petitionemail_civicrm_config(&$config) {
+  _petitionemail_civix_civicrm_config($config);
 }
 
 /**
@@ -18,8 +18,8 @@ function lettertowho_civicrm_config(&$config) {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_xmlMenu
  */
-function lettertowho_civicrm_xmlMenu(&$files) {
-  _lettertowho_civix_civicrm_xmlMenu($files);
+function petitionemail_civicrm_xmlMenu(&$files) {
+  _petitionemail_civix_civicrm_xmlMenu($files);
 }
 
 /**
@@ -27,8 +27,8 @@ function lettertowho_civicrm_xmlMenu(&$files) {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_install
  */
-function lettertowho_civicrm_install() {
-  _lettertowho_civix_civicrm_install();
+function petitionemail_civicrm_install() {
+  _petitionemail_civix_civicrm_install();
 }
 
 /**
@@ -36,8 +36,8 @@ function lettertowho_civicrm_install() {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_uninstall
  */
-function lettertowho_civicrm_uninstall() {
-  _lettertowho_civix_civicrm_uninstall();
+function petitionemail_civicrm_uninstall() {
+  _petitionemail_civix_civicrm_uninstall();
 }
 
 /**
@@ -45,8 +45,8 @@ function lettertowho_civicrm_uninstall() {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_enable
  */
-function lettertowho_civicrm_enable() {
-  _lettertowho_civix_civicrm_enable();
+function petitionemail_civicrm_enable() {
+  _petitionemail_civix_civicrm_enable();
 }
 
 /**
@@ -54,8 +54,8 @@ function lettertowho_civicrm_enable() {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_disable
  */
-function lettertowho_civicrm_disable() {
-  _lettertowho_civix_civicrm_disable();
+function petitionemail_civicrm_disable() {
+  _petitionemail_civix_civicrm_disable();
 }
 
 /**
@@ -70,8 +70,8 @@ function lettertowho_civicrm_disable() {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_upgrade
  */
-function lettertowho_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
-  return _lettertowho_civix_civicrm_upgrade($op, $queue);
+function petitionemail_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
+  return _petitionemail_civix_civicrm_upgrade($op, $queue);
 }
 
 /**
@@ -82,8 +82,8 @@ function lettertowho_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_managed
  */
-function lettertowho_civicrm_managed(&$entities) {
-  _lettertowho_civix_civicrm_managed($entities);
+function petitionemail_civicrm_managed(&$entities) {
+  _petitionemail_civix_civicrm_managed($entities);
 }
 
 /**
@@ -95,8 +95,8 @@ function lettertowho_civicrm_managed(&$entities) {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_caseTypes
  */
-function lettertowho_civicrm_caseTypes(&$caseTypes) {
-  _lettertowho_civix_civicrm_caseTypes($caseTypes);
+function petitionemail_civicrm_caseTypes(&$caseTypes) {
+  _petitionemail_civix_civicrm_caseTypes($caseTypes);
 }
 
 /**
@@ -109,8 +109,8 @@ function lettertowho_civicrm_caseTypes(&$caseTypes) {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_caseTypes
  */
-function lettertowho_civicrm_angularModules(&$angularModules) {
-  _lettertowho_civix_civicrm_angularModules($angularModules);
+function petitionemail_civicrm_angularModules(&$angularModules) {
+  _petitionemail_civix_civicrm_angularModules($angularModules);
 }
 
 /**
@@ -118,21 +118,21 @@ function lettertowho_civicrm_angularModules(&$angularModules) {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_alterSettingsFolders
  */
-function lettertowho_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
-  _lettertowho_civix_civicrm_alterSettingsFolders($metaDataFolders);
+function petitionemail_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
+  _petitionemail_civix_civicrm_alterSettingsFolders($metaDataFolders);
 }
 
 
 /**
  * Implements hook_civicrm_buildForm().
  */
-function lettertowho_civicrm_buildForm($formName, &$form) {
+function petitionemail_civicrm_buildForm($formName, &$form) {
   switch ($formName) {
     case 'CRM_Campaign_Form_Petition_Signature':
       $survey_id = $form->getVar('_surveyId');
       if (!empty($survey_id)) {
         // Find the interface for this petition.
-        $class = CRM_Lettertowho_Interface::findInterface($survey_id);
+        $class = CRM_Petitionemail_Interface::findInterface($survey_id);
         if ($class === FALSE) {
           return;
         }
@@ -149,7 +149,7 @@ function lettertowho_civicrm_buildForm($formName, &$form) {
 
     case 'CRM_Campaign_Form_Petition':
       // TODO: add js for picking message field.
-      CRM_Core_Resources::singleton()->addScriptFile('com.aghstrategies.lettertowho', 'js/messageField.js');
+      CRM_Core_Resources::singleton()->addScriptFile('com.aghstrategies.petitionemail', 'js/messageField.js');
       // TODO: make sure it shows survey custom fields.
   }
 }
@@ -157,10 +157,10 @@ function lettertowho_civicrm_buildForm($formName, &$form) {
 /**
  * Implements hook_civicrm_postProcess().
  */
-function lettertowho_civicrm_postProcess($formName, &$form) {
+function petitionemail_civicrm_postProcess($formName, &$form) {
   switch ($formName) {
     case 'CRM_Campaign_Form_Petition_Signature':
-      $class = CRM_Lettertowho_Interface::findInterface($form->petition['id']);
+      $class = CRM_Petitionemail_Interface::findInterface($form->petition['id']);
       if ($class === FALSE) {
         return;
       }

@@ -7,7 +7,7 @@
 /**
  * The base class for petition delivery interfaces.
  */
-class CRM_Lettertowho_Interface {
+class CRM_Petitionemail_Interface {
   /**
    * What kind of interface this is.
    *
@@ -95,7 +95,7 @@ class CRM_Lettertowho_Interface {
       }
       catch (CiviCRM_API3_Exception $e) {
         $error = $e->getMessage();
-        CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.lettertowho')));
+        CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.petitionemail')));
       }
     }
     return $this->fields;
@@ -117,7 +117,7 @@ class CRM_Lettertowho_Interface {
     }
     catch (CiviCRM_API3_Exception $e) {
       $error = $e->getMessage();
-      CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.lettertowho')));
+      CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.petitionemail')));
     }
     return $this->petitionEmailVal;
   }
@@ -138,7 +138,7 @@ class CRM_Lettertowho_Interface {
   public function getSourceRecordType() {
     if (empty($this->sourceRecordType)) {
       $cache = CRM_Utils_Cache::singleton();
-      $this->sourceRecordType = $cache->get('lettertowho_sourceRecordType');
+      $this->sourceRecordType = $cache->get('petitionemail_sourceRecordType');
     }
     if (empty($this->sourceRecordType)) {
       try {
@@ -158,12 +158,12 @@ class CRM_Lettertowho_Interface {
         }
         else {
           $this->sourceRecordType = $sourceTypeInfo['api.OptionValue.getsingle']['value'];
-          $cache->set('lettertowho_sourceRecordType', $this->sourceRecordType);
+          $cache->set('petitionemail_sourceRecordType', $this->sourceRecordType);
         }
       }
       catch (CiviCRM_API3_Exception $e) {
         $error = $e->getMessage();
-        CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.lettertowho')));
+        CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.petitionemail')));
       }
     }
 
@@ -179,7 +179,7 @@ class CRM_Lettertowho_Interface {
   public function getDefaultFromAddress() {
     if (empty($this->defaultFromAddress)) {
       $cache = CRM_Utils_Cache::singleton();
-      $this->defaultFromAddress = $cache->get('lettertowho_defaultFromAddress');
+      $this->defaultFromAddress = $cache->get('petitionemail_defaultFromAddress');
     }
     if (empty($this->defaultFromAddress)) {
       try {
@@ -199,11 +199,11 @@ class CRM_Lettertowho_Interface {
           return NULL;
         }
         $this->defaultFromAddress = $defaultMail['api.OptionValue.getsingle']['label'];
-        $cache->set('lettertowho_defaultFromAddress', $this->defaultFromAddress);
+        $cache->set('petitionemail_defaultFromAddress', $this->defaultFromAddress);
       }
       catch (CiviCRM_API3_Exception $e) {
         $error = $e->getMessage();
-        CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.lettertowho')));
+        CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.petitionemail')));
       }
     }
     return $this->defaultFromAddress;
@@ -230,7 +230,7 @@ class CRM_Lettertowho_Interface {
         'id' => $surveyId,
       ));
       if (!empty($result)) {
-        $class = "CRM_Lettertowho_Interface_$result";
+        $class = "CRM_Petitionemail_Interface_$result";
         if (class_exists($class)) {
           return $class;
         }
@@ -238,7 +238,7 @@ class CRM_Lettertowho_Interface {
     }
     catch (CiviCRM_API3_Exception $e) {
       $error = $e->getMessage();
-      CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.lettertowho')));
+      CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.petitionemail')));
     }
 
     return FALSE;
@@ -272,7 +272,7 @@ class CRM_Lettertowho_Interface {
     }
     catch (CiviCRM_API3_Exception $e) {
       $error = $e->getMessage();
-      CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.lettertowho')));
+      CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.petitionemail')));
       return FALSE;
     }
   }
