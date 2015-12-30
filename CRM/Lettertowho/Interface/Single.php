@@ -49,7 +49,10 @@ class CRM_Lettertowho_Interface_Single extends CRM_Lettertowho_Interface {
   public function processSignature($activityId) {
     $fields = $this->findFields();
     $petitionemailval = $this->getFieldsData($survey_id);
-    $messageField = 'custom_' . intval($petitionemailval[$fields['Message_Field']]);
+    $messageField = $this->findMessageField();
+    if ($messageField === FALSE) {
+      return;
+    }
 
     // Get custom message value.
     try {
@@ -109,23 +112,15 @@ class CRM_Lettertowho_Interface_Single extends CRM_Lettertowho_Interface {
       CRM_Core_Session::setStatus(ts('Message sent successfully to %1', array('domain' => 'com.aghstrategies.lettertowho', 1 => $mailParams['toName'])));
     }
 
-    parent::processSignature($activityId, $message);
+    parent::processSignature($activityId);
   }
 
   public function buildSigForm($form) {
     $defaults = $form->getVar('_defaults');
-    $messageUfField = CRM_Utils_Array::value($this->fields['Message_Field'], $this->petitionEmailVal);
-    // We know $messageUfField is filled because this isn't marked incomplete.
-    // Now find the field name from the UFField id.
-    try {
-      $messageField = civicrm_api3('UFField', 'getvalue', array(
-        'return' => "field_name",
-        'id' => 78,
-      ));
-    }
-    catch (CiviCRM_API3_Exception $e) {
-      $error = $e->getMessage();
-      CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.lettertowho')));
+
+    $messageField = $this->findMessageField();
+    if ($messageField === FALSE) {
+      return;
     }
 
     foreach ($form->_elements as $element) {

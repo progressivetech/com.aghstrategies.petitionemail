@@ -163,44 +163,18 @@ function lettertowho_civicrm_buildForm($formName, &$form) {
 function lettertowho_civicrm_post($op, $objectName, $objectId, &$objectRef) {
   if ($op == 'create' && $objectName == 'Activity') {
     // First, check that the activity is a petition signature.
-    $petitionActivityType = _lettertowho_getPetitionActivityType();
+    $petitionActivityType = CRM_Lettertowho_Utils::getPetitionActivityType();
 
     if ($objectRef->activity_type_id != $petitionActivityType) {
       return;
     }
 
-    $deliveryInterface = new CRM_Lettertowho_Interface_Single($objectRef->source_record_id);
-    $deliveryInterface->processSignature($objectRef->id);
-  }
-}
-
-function _lettertowho_getPetitionActivityType() {
-  $cache = CRM_Utils_Cache::singleton();
-  $petitionActivityType = $cache->get('lettertowho_petitionActivityType');
-  if (empty($petitionActivityType)) {
-    try {
-      $petitionTypeParams = array(
-        'name' => "activity_type",
-        'api.OptionValue.getsingle' => array(
-          'option_group_id' => '$value.id',
-          'name' => "Petition",
-          'options' => array('limit' => 1),
-        ),
-        'options' => array('limit' => 1),
-      );
-      $petitionTypeInfo = civicrm_api3('OptionGroup', 'getsingle', $petitionTypeParams);
-    }
-    catch (CiviCRM_API3_Exception $e) {
-      $error = $e->getMessage();
-      CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.lettertowho')));
-    }
-    if (empty($petitionTypeInfo['api.OptionValue.getsingle']['value'])) {
+    // Find the interface for this petition.
+    $class = CRM_Lettertowho_Interface::findInterface($objectRef->source_record_id);
+    if ($class === FALSE) {
       return;
     }
-    else {
-      $petitionActivityType = $petitionTypeInfo['api.OptionValue.getsingle']['value'];
-      $cache->set('lettertowho_petitionActivityType', $petitionActivityType);
-    }
+    $interface = new $class($objectRef->source_record_id);
+    $interface->processSignature($objectRef->id);
   }
-  return $petitionActivityType;
 }

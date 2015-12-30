@@ -127,6 +127,7 @@ class CRM_Lettertowho_Interface {
   }
 
   public function processSignature($activityId) {
+    // Send the email(s).
   }
 
   /**
@@ -252,6 +253,29 @@ class CRM_Lettertowho_Interface {
    */
   public function buildSigForm($form) {
     // Process the form.
+  }
+
+  /**
+   * Find the field containing the petition message.
+   *
+   * @return string
+   *   The field name (e.g. "custom_4") or FALSE if none found.
+   */
+  public function findMessageField() {
+    $messageUfField = CRM_Utils_Array::value($this->fields['Message_Field'], $this->petitionEmailVal);
+    // We know $messageUfField is filled because this isn't marked incomplete.
+    // Now find the field name from the UFField id.
+    try {
+      return civicrm_api3('UFField', 'getvalue', array(
+        'return' => "field_name",
+        'id' => $messageUfField,
+      ));
+    }
+    catch (CiviCRM_API3_Exception $e) {
+      $error = $e->getMessage();
+      CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.lettertowho')));
+      return FALSE;
+    }
   }
 
 }
