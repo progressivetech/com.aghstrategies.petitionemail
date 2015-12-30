@@ -155,26 +155,17 @@ function lettertowho_civicrm_buildForm($formName, &$form) {
 }
 
 /**
- * Implements hook_civicrm_post().
- *
- * TODO: Make sure custom fields are saved at this point: it may be that this
- * needs to be attached to the postProcess.
+ * Implements hook_civicrm_postProcess().
  */
-function lettertowho_civicrm_post($op, $objectName, $objectId, &$objectRef) {
-  if ($op == 'create' && $objectName == 'Activity') {
-    // First, check that the activity is a petition signature.
-    $petitionActivityType = CRM_Lettertowho_Utils::getPetitionActivityType();
-
-    if ($objectRef->activity_type_id != $petitionActivityType) {
-      return;
-    }
-
-    // Find the interface for this petition.
-    $class = CRM_Lettertowho_Interface::findInterface($objectRef->source_record_id);
-    if ($class === FALSE) {
-      return;
-    }
-    $interface = new $class($objectRef->source_record_id);
-    $interface->processSignature($objectRef->id);
+function lettertowho_civicrm_postProcess($formName, &$form) {
+  switch ($formName) {
+    case 'CRM_Campaign_Form_Petition_Signature':
+      $class = CRM_Lettertowho_Interface::findInterface($form->petition['id']);
+      if ($class === FALSE) {
+        return;
+      }
+      $interface = new $class($form->petition['id']);
+      $interface->processSignature($form);
+      break;
   }
 }

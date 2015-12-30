@@ -14,7 +14,7 @@ class CRM_Lettertowho_Interface_Single extends CRM_Lettertowho_Interface {
   /**
    * Instantiate the delivery interface.
    *
-   * @param int $survey_id
+   * @param int $surveyId
    *   The ID of the petition.
    */
   public function __construct($surveyId) {
@@ -41,67 +41,54 @@ class CRM_Lettertowho_Interface_Single extends CRM_Lettertowho_Interface {
   }
 
   /**
-   * Take the signature activity and send an email to the recipient.
+   * Take the signature form and send an email to the recipient.
    *
-   * @param int $activityId
-   *   The petition signature activity ID.
+   * @param CRM_Campaign_Form_Petition_Signature $form
+   *   The petition form.
    */
-  public function processSignature($activityId) {
-    $fields = $this->findFields();
-    $petitionemailval = $this->getFieldsData($survey_id);
+  public function processSignature($form) {
+    // Get the message.
     $messageField = $this->findMessageField();
     if ($messageField === FALSE) {
       return;
     }
+    $message = empty($form->_submitValues[$messageField]) ? $this->petitionEmailVal[$this->fields['Default_Message']] : $form->_submitValues[$messageField];
 
-    // Get custom message value.
+    // Get the recipient.
     try {
-      $signatureParams = array(
-        'id' => $activityId,
-        'api.ActivityContact.getsingle' => array(
-          'record_type_id' => $this->getSourceRecordType(),
-          'options' => array('limit' => 1),
-          'api.Contact.getsingle' => array(
-            'return' => array(
-              'display_name',
-              'email',
-            ),
-          ),
-        ),
+      $contact = civicrm_api3('Contact', 'getsingle', array(
         'return' => array(
-          $messageField,
+          'display_name',
+          'email',
         ),
-      );
-      $signature = civicrm_api3('Activity', 'getsingle', $signatureParams);
+        'id' => $form->_contactId,
+      ));
     }
     catch (CiviCRM_API3_Exception $e) {
       $error = $e->getMessage();
       CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.lettertowho')));
     }
 
-    $petitionMessage = empty($signature[$messageField]) ? CRM_Utils_Array::value($fields['Default_Message'], $petitionemailval) : $signature[$messageField];
-
-    // Populate the "from" address:
-    if (empty($signature['api.ActivityContact.getsingle']['api.Contact.getsingle']['email'])) {
+    if (empty($contact['email'])) {
       $from = $this->getDefaultFromAddress();
     }
-    elseif (empty($signature['api.ActivityContact.getsingle']['api.Contact.getsingle']['display_name'])) {
-      $from = $signature['api.ActivityContact.getsingle']['api.Contact.getsingle']['email'];
+    elseif (empty($contact['display_name'])) {
+      $from = $contact['email'];
     }
     else {
-      $from = "\"{$signature['api.ActivityContact.getsingle']['api.Contact.getsingle']['display_name']}\" <{$signature['api.ActivityContact.getsingle']['api.Contact.getsingle']['email']}>";
+      $from = "\"{$contact['display_name']}\" <{$contact['email']}>";
     }
 
     // Setup email message:
     $mailParams = array(
       'groupName' => 'Activity Email Sender',
       'from' => $from,
-      'toName' => $petitionemailval[$fields['Recipient_Name']],
-      'toEmail' => $petitionemailval[$fields['Recipient_Email']],
-      'subject' => $petitionemailval[$fields['Subject']],
+      'toName' => $this->petitionEmailVal[$this->fields['Recipient_Name']],
+      'toEmail' => $this->petitionEmailVal[$this->fields['Recipient_Email']],
+      'subject' => $this->petitionEmailVal[$this->fields['Subject']],
       // 'cc' => $cc, TODO: offer option to CC.
       // 'bcc' => $bcc,
-      'text' => $petitionMessage,
+      'text' => $message,
       // 'html' => $html_message, TODO: offer HTML option.
     );
 
@@ -111,10 +98,15 @@ class CRM_Lettertowho_Interface_Single extends CRM_Lettertowho_Interface {
     else {
       CRM_Core_Session::setStatus(ts('Message sent successfully to %1', array('domain' => 'com.aghstrategies.lettertowho', 1 => $mailParams['toName'])));
     }
-
-    parent::processSignature($activityId);
+    parent::processSignature($form);
   }
 
+  /**
+   * Prepare the signature form with the default message.
+   *
+   * @param CRM_Campaign_Form_Petition_Signature $form
+   *   The petition form.
+   */
   public function buildSigForm($form) {
     $defaults = $form->getVar('_defaults');
 

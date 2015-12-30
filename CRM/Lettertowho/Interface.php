@@ -88,7 +88,6 @@ class CRM_Lettertowho_Interface {
         );
         $result = civicrm_api3('CustomField', 'get', $fieldParams);
         if (!empty($result['values'])) {
-          $this->fields = array();
           foreach ($result['values'] as $f) {
             $this->fields[$f['name']] = "custom_{$f['id']}";
           }
@@ -126,7 +125,7 @@ class CRM_Lettertowho_Interface {
   public function petitionForm() {
   }
 
-  public function processSignature($activityId) {
+  public function processSignature($form) {
     // Send the email(s).
   }
 
