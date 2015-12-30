@@ -18,7 +18,7 @@ class CRM_Lettertowho_Interface_Single extends CRM_Lettertowho_Interface {
    *   The ID of the petition.
    */
   public function __construct($surveyId) {
-    parent::__construct($surveyId)
+    parent::__construct($surveyId);
 
     $this->interfaceType = 'single';
 
@@ -114,13 +114,26 @@ class CRM_Lettertowho_Interface_Single extends CRM_Lettertowho_Interface {
 
   public function buildSigForm($form) {
     $defaults = $form->getVar('_defaults');
+    $messageUfField = CRM_Utils_Array::value($this->fields['Message_Field'], $this->petitionEmailVal);
+    // We know $messageUfField is filled because this isn't marked incomplete.
+    // Now find the field name from the UFField id.
+    try {
+      $messageField = civicrm_api3('UFField', 'getvalue', array(
+        'return' => "field_name",
+        'id' => 78,
+      ));
+    }
+    catch (CiviCRM_API3_Exception $e) {
+      $error = $e->getMessage();
+      CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.lettertowho')));
+    }
 
     foreach ($form->_elements as $element) {
-      if ($element->_attributes['name'] == $this->fields['Message_Field']) {
-        $element->_value = CRM_Utils_Array::value($this->fields['Default_Message'], $this->petitionemailval);
+      if ($element->_attributes['name'] == $messageField) {
+        $element->_value = CRM_Utils_Array::value($this->fields['Default_Message'], $this->petitionEmailVal);
       }
     }
-    $defaults[$this->fields['Message_Field']] = $form->_defaultValues[$this->fields['Message_Field']] = CRM_Utils_Array::value($this->fields['Default_Message'], $this->petitionemailval);
+    $defaults[$messageField] = $form->_defaultValues[$messageField] = CRM_Utils_Array::value($this->fields['Default_Message'], $this->petitionEmailVal);
     $form->setVar('_defaults', $defaults);
   }
 

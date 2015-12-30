@@ -144,17 +144,6 @@ function lettertowho_civicrm_buildForm($formName, &$form) {
         }
 
         $interface->buildSigForm($form);
-
-        list($fields, $petitionemailval) = lettertowho_getFieldsData($survey_id);
-
-        $defaults = $form->getVar('_defaults');
-        foreach ($form->_elements as $element) {
-          if ($element->_attributes['name'] == $fields['Message_Field']) {
-            $element->_value = CRM_Utils_Array::value($fields['Default_Message'], $petitionemailval);
-          }
-        }
-        $defaults[$fields['Message_Field']] = $form->_defaultValues[$fields['Message_Field']] = CRM_Utils_Array::value($fields['Default_Message'], $petitionemailval);
-        $form->setVar('_defaults', $defaults);
       }
       break;
 
