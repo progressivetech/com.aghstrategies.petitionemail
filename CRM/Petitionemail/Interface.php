@@ -271,4 +271,40 @@ class CRM_Petitionemail_Interface {
     }
   }
 
+  /**
+   * Set the from line for emails.
+   *
+   * @param int $contactId
+   *   The contact ID of the sender (petition signer).
+   *
+   * @return string
+   *   The from address in "Name <email>" format.
+   */
+  public function getSenderLine($contactId) {
+    // Get the sender.
+    try {
+      $contact = civicrm_api3('Contact', 'getsingle', array(
+        'return' => array(
+          'display_name',
+          'email',
+        ),
+        'id' => $contactId,
+      ));
+    }
+    catch (CiviCRM_API3_Exception $e) {
+      $error = $e->getMessage();
+      CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.petitionemail')));
+    }
+
+    if (empty($contact['email'])) {
+      return $this->getDefaultFromAddress();
+    }
+    elseif (empty($contact['display_name'])) {
+      return $contact['email'];
+    }
+    else {
+      return "\"{$contact['display_name']}\" <{$contact['email']}>";
+    }
+  }
+
 }
