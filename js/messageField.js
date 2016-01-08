@@ -1,5 +1,9 @@
 CRM.$(function($) {
-  var $messageField = $('#customData .custom-group-Letter_To input[data-crm-custom="Letter_To:Message_Field"]')
+  var $messageField = $('#customData .custom-group-Letter_To input[data-crm-custom="Letter_To:Message_Field"]');
+  $messageField.attr({
+    placeholder: '- Select Field -',
+    allowClear: 'true',
+  });
   createEntityRef($messageField, $('#profile_id').val());
 
   $('#profile_id').change( function() {
