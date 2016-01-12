@@ -4,7 +4,7 @@
   <CustomGroups>
     <CustomGroup>
       <name>Letter_To</name>
-      <title>Letter To</title>
+      <title>Petition Email Delivery Options</title>
       <extends>Survey</extends>
       <style>Inline</style>
       <collapse_display>1</collapse_display>
