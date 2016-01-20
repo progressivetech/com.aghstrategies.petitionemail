@@ -43,7 +43,6 @@ class CRM_Petitionemail_Interface {
    * $type array
    */
   protected $neededFields = array(
-    'Default_Message',
     'Message_Field',
   );
 

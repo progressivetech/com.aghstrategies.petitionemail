@@ -50,6 +50,10 @@ class CRM_Petitionemail_Interface_Single extends CRM_Petitionemail_Interface {
       return;
     }
     $message = empty($form->_submitValues[$messageField]) ? $this->petitionEmailVal[$this->fields['Default_Message']] : $form->_submitValues[$messageField];
+    // If message is left empty and no default message, don't send anything.
+    if (empty($message)) {
+      return;
+    }
 
     // Setup email message:
     $mailParams = array(
@@ -86,13 +90,19 @@ class CRM_Petitionemail_Interface_Single extends CRM_Petitionemail_Interface {
     if ($messageField === FALSE) {
       return;
     }
+    if (empty($this->petitionEmailVal[$this->fields['Default_Message']])) {
+      return;
+    }
+    else {
+      $defaultMessage = $this->petitionEmailVal[$this->fields['Default_Message']];
+    }
 
     foreach ($form->_elements as $element) {
       if ($element->_attributes['name'] == $messageField) {
-        $element->_value = CRM_Utils_Array::value($this->fields['Default_Message'], $this->petitionEmailVal);
+        $element->_value = $defaultMessage;
       }
     }
-    $defaults[$messageField] = $form->_defaultValues[$messageField] = CRM_Utils_Array::value($this->fields['Default_Message'], $this->petitionEmailVal);
+    $defaults[$messageField] = $form->_defaultValues[$messageField] = $defaultMessage;
     $form->setVar('_defaults', $defaults);
   }
 
