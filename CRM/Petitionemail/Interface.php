@@ -43,7 +43,7 @@ class CRM_Petitionemail_Interface {
    * $type array
    */
   protected $neededFields = array(
-    'Message_Field',
+    'Support_Message_Field',
   );
 
   /**
@@ -76,7 +76,7 @@ class CRM_Petitionemail_Interface {
     if (empty($this->fields)) {
       try {
         $fieldParams = array(
-          'custom_group_id' => "letter_to",
+          'custom_group_id' => ['IN' => ["Email_Recipient", "Support_Message"]],
           'sequential' => 1,
         );
         $result = civicrm_api3('CustomField', 'get', $fieldParams);
@@ -215,8 +215,8 @@ class CRM_Petitionemail_Interface {
     try {
       $fieldId = civicrm_api3('CustomField', 'getvalue', array(
         'return' => "id",
-        'name' => "Recipient_System",
-        'custom_group_id' => "Letter_To",
+        'name' => "Email_Recipient_System",
+        'custom_group_id' => "Email_Recipient",
       ));
       $result = civicrm_api3('Survey', 'getvalue', array(
         'return' => "custom_$fieldId",
@@ -254,7 +254,7 @@ class CRM_Petitionemail_Interface {
    *   The field name (e.g. "custom_4") or FALSE if none found.
    */
   public function findMessageField() {
-    $messageUfField = CRM_Utils_Array::value($this->fields['Message_Field'], $this->petitionEmailVal);
+    $messageUfField = CRM_Utils_Array::value($this->fields['Support_Message_Field'], $this->petitionEmailVal);
     // We know $messageUfField is filled because this isn't marked incomplete.
     // Now find the field name from the UFField id.
     try {

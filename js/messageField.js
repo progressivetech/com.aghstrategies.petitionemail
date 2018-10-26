@@ -1,5 +1,5 @@
 CRM.$(function($) {
-  var msgFieldSelector = '#customData .custom-group-Letter_To input[data-crm-custom="Letter_To:Message_Field"]';
+  var msgFieldSelector = '#customData .custom-group-Support_Message input[data-crm-custom="Support_Message:Support_Message_Field"]';
   var $messageField = $(msgFieldSelector);
   var initMessageField = function(m) {
     $messageField.attr({

@@ -49,7 +49,7 @@ class CRM_Petitionemail_Interface_Single extends CRM_Petitionemail_Interface {
     if ($messageField === FALSE) {
       return;
     }
-    $message = empty($form->_submitValues[$messageField]) ? $this->petitionEmailVal[$this->fields['Default_Message']] : $form->_submitValues[$messageField];
+    $message = empty($form->_submitValues[$messageField]) ? $this->petitionEmailVal[$this->fields['Support_Message']] : $form->_submitValues[$messageField];
     // If message is left empty and no default message, don't send anything.
     if (empty($message)) {
       return;
@@ -90,11 +90,11 @@ class CRM_Petitionemail_Interface_Single extends CRM_Petitionemail_Interface {
     if ($messageField === FALSE) {
       return;
     }
-    if (empty($this->petitionEmailVal[$this->fields['Default_Message']])) {
+    if (empty($this->petitionEmailVal[$this->fields['Support_Message']])) {
       return;
     }
     else {
-      $defaultMessage = $this->petitionEmailVal[$this->fields['Default_Message']];
+      $defaultMessage = $this->petitionEmailVal[$this->fields['Support_Message']];
     }
 
     foreach ($form->_elements as $element) {

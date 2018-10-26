@@ -3,8 +3,8 @@
 <CustomData>
   <CustomGroups>
     <CustomGroup>
-      <name>Letter_To</name>
-      <title>Petition Email Delivery Options</title>
+      <name>Email_Recipient</name>
+      <title>Email Recipient</title>
       <extends>Survey</extends>
       <style>Inline</style>
       <collapse_display>1</collapse_display>
@@ -14,10 +14,22 @@
       <collapse_adv_display>0</collapse_adv_display>
       <is_reserved>1</is_reserved>
     </CustomGroup>
+    <CustomGroup>
+      <name>Support_Message</name>
+      <title>Email Message to Recipient to Urge Support</title>
+      <extends>Survey</extends>
+      <style>Inline</style>
+      <collapse_display>1</collapse_display>
+      <weight>4</weight>
+      <is_active>1</is_active>
+      <is_multiple>0</is_multiple>
+      <collapse_adv_display>0</collapse_adv_display>
+      <is_reserved>1</is_reserved>
+    </CustomGroup>
   </CustomGroups>
   <CustomFields>
     <CustomField>
-      <name>Recipient_System</name>
+      <name>Email_Recipient_System</name>
       <label>Email Recipient System</label>
       <data_type>String</data_type>
       <html_type>Select</html_type>
@@ -31,29 +43,10 @@
       <text_length>255</text_length>
       <note_columns>60</note_columns>
       <note_rows>4</note_rows>
-      <column_name>letter_to_recipient_system</column_name>
+      <column_name>email_recipient_system</column_name>
       <in_selector>0</in_selector>
-      <option_group_name>letter_to_recipient_system</option_group_name>
-      <custom_group_name>Letter_To</custom_group_name>
-    </CustomField>
-    <CustomField>
-      <name>Subject</name>
-      <label>Subject</label>
-      <data_type>String</data_type>
-      <html_type>Text</html_type>
-      <is_required>0</is_required>
-      <is_searchable>1</is_searchable>
-      <is_search_range>0</is_search_range>
-      <weight>2</weight>
-      <help_post>This is the subject line for outgoing emails</help_post>
-      <is_active>1</is_active>
-      <is_view>0</is_view>
-      <text_length>128</text_length>
-      <note_columns>60</note_columns>
-      <note_rows>4</note_rows>
-      <column_name>letter_to_subject</column_name>
-      <in_selector>0</in_selector>
-      <custom_group_name>Letter_To</custom_group_name>
+      <option_group_name>email_recipient_system</option_group_name>
+      <custom_group_name>Email_Recipient</custom_group_name>
     </CustomField>
     <CustomField>
       <name>Recipient_Name</name>
@@ -70,9 +63,9 @@
       <text_length>128</text_length>
       <note_columns>60</note_columns>
       <note_rows>4</note_rows>
-      <column_name>letter_to_recipient_name</column_name>
+      <column_name>email_recipient_name</column_name>
       <in_selector>0</in_selector>
-      <custom_group_name>Letter_To</custom_group_name>
+      <custom_group_name>Email_Recipient</custom_group_name>
     </CustomField>
     <CustomField>
       <name>Recipient_Email</name>
@@ -89,13 +82,32 @@
       <text_length>128</text_length>
       <note_columns>60</note_columns>
       <note_rows>4</note_rows>
-      <column_name>letter_to_recipient_email</column_name>
+      <column_name>email_recipient_email</column_name>
       <in_selector>0</in_selector>
-      <custom_group_name>Letter_To</custom_group_name>
+      <custom_group_name>Email_Recipient</custom_group_name>
     </CustomField>
     <CustomField>
-      <name>Default_Message</name>
-      <label>Default Message</label>
+      <name>Support_Subject</name>
+      <label>Subject</label>
+      <data_type>String</data_type>
+      <html_type>Text</html_type>
+      <is_required>0</is_required>
+      <is_searchable>1</is_searchable>
+      <is_search_range>0</is_search_range>
+      <weight>2</weight>
+      <help_post>This is the subject line for outgoing emails</help_post>
+      <is_active>1</is_active>
+      <is_view>0</is_view>
+      <text_length>128</text_length>
+      <note_columns>60</note_columns>
+      <note_rows>4</note_rows>
+      <column_name>support_subject</column_name>
+      <in_selector>0</in_selector>
+      <custom_group_name>Support_Message</custom_group_name>
+    </CustomField>
+    <CustomField>
+      <name>Support_Message</name>
+      <label>Message</label>
       <data_type>Memo</data_type>
       <html_type>TextArea</html_type>
       <is_required>0</is_required>
@@ -107,12 +119,12 @@
       <is_view>0</is_view>
       <note_columns>60</note_columns>
       <note_rows>10</note_rows>
-      <column_name>letter_to_default_message</column_name>
+      <column_name>support_message</column_name>
       <in_selector>0</in_selector>
-      <custom_group_name>Letter_To</custom_group_name>
+      <custom_group_name>Support_Message</custom_group_name>
     </CustomField>
     <CustomField>
-      <name>Message_Field</name>
+      <name>Support_Message_Field</name>
       <label>Message Field</label>
       <data_type>Int</data_type>
       <html_type>Text</html_type>
@@ -126,14 +138,14 @@
       <text_length>255</text_length>
       <note_columns>60</note_columns>
       <note_rows>4</note_rows>
-      <column_name>letter_to_message_field</column_name>
+      <column_name>support_message_field</column_name>
       <in_selector>0</in_selector>
-      <custom_group_name>Letter_To</custom_group_name>
+      <custom_group_name>Support_Message</custom_group_name>
     </CustomField>
   </CustomFields>
   <OptionGroups>
     <OptionGroup>
-      <name>letter_to_recipient_system</name>
+      <name>email_recipient_system</name>
       <title>Recipient System</title>
       <is_reserved>1</is_reserved>
       <is_active>1</is_active>
@@ -149,7 +161,7 @@
       <is_optgroup>0</is_optgroup>
       <is_reserved>0</is_reserved>
       <is_active>1</is_active>
-      <option_group_name>letter_to_recipient_system</option_group_name>
+      <option_group_name>email_recipient_system</option_group_name>
     </OptionValue>
   </OptionValues>
 </CustomData>
