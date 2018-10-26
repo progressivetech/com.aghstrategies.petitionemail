@@ -21,6 +21,7 @@ class CRM_Petitionemail_Interface_Single extends CRM_Petitionemail_Interface {
     parent::__construct($surveyId);
 
     $this->neededFields[] = 'Support_Subject';
+    $this->neededFields[] = 'Support_Message';
     $this->neededFields[] = 'Recipient_Name';
     $this->neededFields[] = 'Recipient_Email';
 
@@ -29,7 +30,7 @@ class CRM_Petitionemail_Interface_Single extends CRM_Petitionemail_Interface {
 
     foreach ($this->neededFields as $neededField) {
       if (empty($fields[$neededField]) || empty($petitionemailval[$fields[$neededField]])) {
-        // TODO: provide something more meaningful.
+        // FIXME provide something more meaningful.
         return;
       }
     }
@@ -68,8 +69,8 @@ class CRM_Petitionemail_Interface_Single extends CRM_Petitionemail_Interface {
       'subject' => $subject,
       // 'cc' => $cc, TODO: offer option to CC.
       // 'bcc' => $bcc,
-      'text' => $message,
-      // 'html' => $html_message, TODO: offer HTML option.
+      'text' => strip_tags($message),
+      'html' => $message,
     );
 
     if (!CRM_Utils_Mail::send($mailParams)) {
