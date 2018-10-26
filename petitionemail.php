@@ -122,9 +122,10 @@ function petitionemail_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
   _petitionemail_civix_civicrm_alterSettingsFolders($metaDataFolders);
 }
 
-
 /**
  * Implements hook_civicrm_buildForm().
+ *
+ * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_buildForm/
  */
 function petitionemail_civicrm_buildForm($formName, &$form) {
   switch ($formName) {
@@ -156,6 +157,8 @@ function petitionemail_civicrm_buildForm($formName, &$form) {
 
 /**
  * Implements hook_civicrm_postProcess().
+ *
+ * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_postProcess/
  */
 function petitionemail_civicrm_postProcess($formName, &$form) {
   switch ($formName) {
