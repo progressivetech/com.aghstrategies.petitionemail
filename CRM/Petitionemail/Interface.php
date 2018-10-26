@@ -43,6 +43,7 @@ class CRM_Petitionemail_Interface {
    * $type array
    */
   protected $neededFields = array(
+    'Support_Subject_Field',
     'Support_Message_Field',
   );
 
@@ -248,19 +249,22 @@ class CRM_Petitionemail_Interface {
   }
 
   /**
-   * Find the field containing the petition message.
+   * Find the field containing the petition UF Field.
+   *
+   * @param string
+   *   The field name (e.g "Support_Message_Field")
    *
    * @return string
-   *   The field name (e.g. "custom_4") or FALSE if none found.
+   *   The custom id field name (e.g. "custom_4") or FALSE if none found.
    */
-  public function findMessageField() {
-    $messageUfField = CRM_Utils_Array::value($this->fields['Support_Message_Field'], $this->petitionEmailVal);
-    // We know $messageUfField is filled because this isn't marked incomplete.
+  public function findUfField($nameUfField) {
+    $ufFieldId = CRM_Utils_Array::value($this->fields["$nameUfField"], $this->petitionEmailVal);
+    // We know $subjectUfField is filled because this isn't marked incomplete.
     // Now find the field name from the UFField id.
     try {
       return civicrm_api3('UFField', 'getvalue', array(
         'return' => "field_name",
-        'id' => $messageUfField,
+        'id' => $ufFieldId,
       ));
     }
     catch (CiviCRM_API3_Exception $e) {

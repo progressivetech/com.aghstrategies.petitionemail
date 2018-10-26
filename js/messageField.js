@@ -1,25 +1,28 @@
 CRM.$(function($) {
-  var msgFieldSelector = '#customData .custom-group-Support_Message input[data-crm-custom="Support_Message:Support_Message_Field"]';
-  var $messageField = $(msgFieldSelector);
-  var initMessageField = function(m) {
-    $messageField.attr({
-      placeholder: '- Select Field -',
-      allowClear: 'true',
+  var selectors = ['#customData .custom-group-Support_Message input[data-crm-custom="Support_Message:Support_Message_Field"]',
+                   '#customData .custom-group-Support_Message input[data-crm-custom="Support_Message:Support_Subject_Field"]'];
+  $(selectors).each(function(index,fieldSelector) {
+    var $field = $(fieldSelector);
+    var initField = function(m) {
+      $field.attr({
+        placeholder: '- Select Field -',
+        allowClear: 'true',
+      });
+      createEntityRef(m, $('#profile_id').val());
+    };
+    initField($field);
+
+    // 4.6 doesn't trigger crmLoad while 4.7 loads the custom data after this runs
+    $('body').on('crmLoad', function() {
+      $field = $(fieldSelector);
+      initField($field);
     });
-    createEntityRef(m, $('#profile_id').val());
-  };
-  initMessageField($messageField);
 
-  // 4.6 doesn't trigger crmLoad while 4.7 loads the custom data after this runs
-  $('body').on('crmLoad', function() {
-    $messageField = $(msgFieldSelector);
-    initMessageField($messageField);
-  });
-
-  $('#profile_id').change( function() {
-    $messageField.crmEntityRef('destroy');
-    $messageField.val('');
-    createEntityRef($messageField, $('#profile_id').val());
+    $('#profile_id').change( function() {
+      $field.crmEntityRef('destroy');
+      $field.val('');
+      createEntityRef($field, $('#profile_id').val());
+    });
   });
 
   function createEntityRef($field, profileId) {
@@ -28,7 +31,6 @@ CRM.$(function($) {
       sequential: 1,
       extends: 'Activity',
       'api.CustomField.get': {
-        data_type: 'Memo',
         return: 'name'
       }
     }).done(function(result) {
