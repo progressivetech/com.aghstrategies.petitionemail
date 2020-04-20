@@ -34,7 +34,7 @@ CRM.$(function($) {
     }).done(function(result) {
       result['values'].forEach(function(val) {
         val['api.CustomField.get']['values'].forEach(function(field) {
-          noteFields.push(field.name);
+          //noteFields.push(field.name);
           noteFields.push('custom_' + field.id);
         });
       });
