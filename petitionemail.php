@@ -152,6 +152,12 @@ function petitionemail_civicrm_buildForm($formName, &$form) {
       // TODO: add js for picking message field.
       CRM_Core_Resources::singleton()->addScriptFile('com.aghstrategies.petitionemail', 'js/messageField.js');
       // TODO: make sure it shows survey custom fields.
+      break;
+
+    case 'CRM_Custom_Form_CustomDataByType':
+      CRM_Core_Resources::singleton()->addScriptFile('com.aghstrategies.petitionemail', 'js/petitionemailsingle.js');
+      break;
+
   }
 }
 
