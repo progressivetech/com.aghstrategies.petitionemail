@@ -26,31 +26,15 @@ CRM.$(function($) {
   });
 
   function createEntityRef($field, profileId) {
-    var noteFields = ['activity_details'];
-    CRM.api3('CustomGroup', 'get', {
-      sequential: 1,
-      extends: 'Activity',
-      'api.CustomField.get': {
-        return: 'name'
-      }
-    }).done(function(result) {
-      result['values'].forEach(function(val) {
-        val['api.CustomField.get']['values'].forEach(function(field) {
-          noteFields.push(field.name);
-          noteFields.push('custom_' + field.id);
-        });
-      });
-      $field.crmEntityRef({
-        entity: 'UFField',
-        placeholder: '- Select Field -',
-        api: {
-          params: {
-            uf_group_id: profileId,
-            field_name: {"IN": noteFields}
-          }
-        },
-        select: {minimumInputLength: 0},
-      });
+    $field.crmEntityRef({
+      entity: 'UFField',
+      placeholder: '- Select Field -',
+      api: {
+        params: {
+          uf_group_id: profileId,
+        }
+      },
+      select: {minimumInputLength: 0},
     });
   }
 });
