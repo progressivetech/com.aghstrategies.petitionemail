@@ -58,12 +58,14 @@ class CRM_Petitionemail_Upgrader extends CRM_Petitionemail_Upgrader_Base {
       $email_recipient_cg_id = $email_recipient_cg['id'];
 
       // Rename the custom group. Note: I'm not bothering to update the table
-      // name.
-      \Civi\Api4\CustomGroup::update()
-        ->addWhere('id', '=', $email_recipient_cg_id)
-        ->addValue('name', 'Email_Recipient')
-        ->addValue('title', 'Email Recipient')
-        ->execute();
+      // name. Also - the BAO layer seems to prevent a custom group name from ever
+      // changing so we have to do this via SQL.
+      $sql = "UPDATE civicrm_custom_group
+        SET
+          name = 'Email_Recipient',
+          title = 'Email Recipient'
+         WHERE id = %0";
+      CRM_Core_DAO::executeQuery($sql, [ 0 => [ $email_recipient_cg_id, 'Integer' ] ]);
 
       // Rename the custom fields. Note: I'm not bothering to update the column
       // names of these fields.
