@@ -15,9 +15,7 @@
   <version>1.1</version>
   <develStage>beta</develStage>
   <compatibility>
-    <ver>4.6</ver>
-    <ver>4.7</ver>
-    <ver>5.x</ver>
+    <ver>5.33</ver>
   </compatibility>
   <civix>
     <namespace>CRM/Petitionemail</namespace>
