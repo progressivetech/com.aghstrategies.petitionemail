@@ -32,6 +32,15 @@ function petitionemail_civicrm_install() {
 }
 
 /**
+ * Implements hook_civicrm_postInstall().
+ *
+ * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_postInstall
+ */
+function petitionemail_civicrm_postInstall() {
+  _petitionemail_civix_civicrm_postInstall();
+}
+
+/**
  * Implements hook_civicrm_uninstall().
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_uninstall
@@ -150,7 +159,7 @@ function petitionemail_civicrm_buildForm($formName, &$form) {
     case 'CRM_Campaign_Form_Petition':
       // TODO: add js for picking message field.
       CRM_Core_Resources::singleton()->addScriptFile('com.aghstrategies.petitionemail', 'js/messageField.js');
-      // TODO: make sure it shows survey custom fields.
+    // TODO: make sure it shows survey custom fields.
   }
 }
 

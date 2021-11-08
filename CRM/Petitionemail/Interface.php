@@ -4,6 +4,8 @@
  * Provide basics for petition delivery interfaces.
  */
 
+use CRM_Petitionemail_ExtensionUtil as E;
+
 /**
  * The base class for petition delivery interfaces.
  */
@@ -21,7 +23,7 @@ class CRM_Petitionemail_Interface {
    *
    * @type array
    */
-  protected $fields = array();
+  protected $fields = [];
 
   /**
    * The default "from" address for the site.
@@ -35,16 +37,16 @@ class CRM_Petitionemail_Interface {
    *
    * @type array
    */
-  protected $petitionEmailVal = array();
+  protected $petitionEmailVal = [];
 
   /**
    * The fields that are required to run a signature of this type.
    *
    * $type array
    */
-  protected $neededFields = array(
+  protected $neededFields = [
     'Message_Field',
-  );
+  ];
 
   /**
    * The ID of the petition using this interface.
@@ -69,16 +71,15 @@ class CRM_Petitionemail_Interface {
   /**
    * Find the custom fields.
    *
-   * @return string
-   *   The field name for API purposes like "custom_123".
+   * @return array
    */
   public function findFields() {
     if (empty($this->fields)) {
       try {
-        $fieldParams = array(
+        $fieldParams = [
           'custom_group_id' => "letter_to",
           'sequential' => 1,
-        );
+        ];
         $result = civicrm_api3('CustomField', 'get', $fieldParams);
         if (!empty($result['values'])) {
           foreach ($result['values'] as $f) {
@@ -88,7 +89,7 @@ class CRM_Petitionemail_Interface {
       }
       catch (CiviCRM_API3_Exception $e) {
         $error = $e->getMessage();
-        CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.petitionemail')));
+        CRM_Core_Error::debug_log_message(E::ts('API Error: %1', [1 => $error]));
       }
     }
     return $this->fields;
@@ -102,15 +103,15 @@ class CRM_Petitionemail_Interface {
    */
   public function getFieldsData() {
     try {
-      $surveyParams = array(
+      $surveyParams = [
         'id' => $this->surveyId,
         'return' => array_values($this->fields),
-      );
+      ];
       $this->petitionEmailVal = civicrm_api3('Survey', 'getsingle', $surveyParams);
     }
     catch (CiviCRM_API3_Exception $e) {
       $error = $e->getMessage();
-      CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.petitionemail')));
+      CRM_Core_Error::debug_log_message(E::ts('API Error: %1', [1 => $error]));
     }
     return $this->petitionEmailVal;
   }
@@ -135,15 +136,15 @@ class CRM_Petitionemail_Interface {
     }
     if (empty($this->sourceRecordType)) {
       try {
-        $sourceTypeParams = array(
+        $sourceTypeParams = [
           'name' => "activity_contacts",
-          'options' => array('limit' => 1),
-          'api.OptionValue.getsingle' => array(
+          'options' => ['limit' => 1],
+          'api.OptionValue.getsingle' => [
             'option_group_id' => '$value.id',
             'name' => "Activity Source",
-            'options' => array('limit' => 1),
-          ),
-        );
+            'options' => ['limit' => 1],
+          ],
+        ];
         $sourceTypeInfo = civicrm_api3('OptionGroup', 'getsingle', $sourceTypeParams);
 
         if (empty($sourceTypeInfo['api.OptionValue.getsingle']['value'])) {
@@ -156,7 +157,7 @@ class CRM_Petitionemail_Interface {
       }
       catch (CiviCRM_API3_Exception $e) {
         $error = $e->getMessage();
-        CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.petitionemail')));
+        CRM_Core_Error::debug_log_message(E::ts('API Error: %1', [1 => $error]));
       }
     }
 
@@ -176,14 +177,14 @@ class CRM_Petitionemail_Interface {
     }
     if (empty($this->defaultFromAddress)) {
       try {
-        $defaultMailParams = array(
+        $defaultMailParams = [
           'name' => "from_email_address",
-          'options' => array('limit' => 1),
-          'api.OptionValue.getsingle' => array(
+          'options' => ['limit' => 1],
+          'api.OptionValue.getsingle' => [
             'is_default' => 1,
-            'options' => array('limit' => 1),
-          ),
-        );
+            'options' => ['limit' => 1],
+          ],
+        ];
         $defaultMail = civicrm_api3('OptionGroup', 'getsingle', $defaultMailParams);
         if (empty($defaultMail['api.OptionValue.getsingle']['label'])
           || $defaultMail['api.OptionValue.getsingle']['label'] == $defaultMail['api.OptionValue.getsingle']['name']) {
@@ -196,7 +197,7 @@ class CRM_Petitionemail_Interface {
       }
       catch (CiviCRM_API3_Exception $e) {
         $error = $e->getMessage();
-        CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.petitionemail')));
+        CRM_Core_Error::debug_log_message(E::ts('API Error: %1', [1 => $error]));
       }
     }
     return $this->defaultFromAddress;
@@ -213,15 +214,15 @@ class CRM_Petitionemail_Interface {
    */
   public static function findInterface($surveyId) {
     try {
-      $fieldId = civicrm_api3('CustomField', 'getvalue', array(
+      $fieldId = civicrm_api3('CustomField', 'getvalue', [
         'return' => "id",
         'name' => "Recipient_System",
         'custom_group_id' => "Letter_To",
-      ));
-      $result = civicrm_api3('Survey', 'getvalue', array(
+      ]);
+      $result = civicrm_api3('Survey', 'getvalue', [
         'return' => "custom_$fieldId",
         'id' => $surveyId,
-      ));
+      ]);
       if (!empty($result)) {
         $class = "CRM_Petitionemail_Interface_$result";
         if (class_exists($class)) {
@@ -231,7 +232,7 @@ class CRM_Petitionemail_Interface {
     }
     catch (CiviCRM_API3_Exception $e) {
       $error = $e->getMessage();
-      CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.petitionemail')));
+      CRM_Core_Error::debug_log_message(E::ts('API Error: %1', [1 => $error]));
     }
 
     return FALSE;
@@ -258,14 +259,14 @@ class CRM_Petitionemail_Interface {
     // We know $messageUfField is filled because this isn't marked incomplete.
     // Now find the field name from the UFField id.
     try {
-      return civicrm_api3('UFField', 'getvalue', array(
+      return civicrm_api3('UFField', 'getvalue', [
         'return' => "field_name",
         'id' => $messageUfField,
-      ));
+      ]);
     }
     catch (CiviCRM_API3_Exception $e) {
       $error = $e->getMessage();
-      CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.petitionemail')));
+      CRM_Core_Error::debug_log_message(E::ts('API Error: %1', [1 => $error]));
       return FALSE;
     }
   }
@@ -282,17 +283,17 @@ class CRM_Petitionemail_Interface {
   public function getSenderLine($contactId) {
     // Get the sender.
     try {
-      $contact = civicrm_api3('Contact', 'getsingle', array(
-        'return' => array(
+      $contact = civicrm_api3('Contact', 'getsingle', [
+        'return' => [
           'display_name',
           'email',
-        ),
+        ],
         'id' => $contactId,
-      ));
+      ]);
     }
     catch (CiviCRM_API3_Exception $e) {
       $error = $e->getMessage();
-      CRM_Core_Error::debug_log_message(t('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.petitionemail')));
+      CRM_Core_Error::debug_log_message(E::ts('API Error: %1', [1 => $error]));
     }
 
     if (empty($contact['email'])) {

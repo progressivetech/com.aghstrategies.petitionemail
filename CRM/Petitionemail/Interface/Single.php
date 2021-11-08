@@ -25,7 +25,7 @@ class CRM_Petitionemail_Interface_Single extends CRM_Petitionemail_Interface {
     $this->neededFields[] = 'Recipient_Email';
 
     $fields = $this->findFields();
-    $petitionemailval = $this->getFieldsData($surveyId);
+    $petitionemailval = $this->getFieldsData();
 
     foreach ($this->neededFields as $neededField) {
       if (empty($fields[$neededField]) || empty($petitionemailval[$fields[$neededField]])) {
@@ -56,7 +56,7 @@ class CRM_Petitionemail_Interface_Single extends CRM_Petitionemail_Interface {
     }
 
     // Setup email message:
-    $mailParams = array(
+    $mailParams = [
       'groupName' => 'Activity Email Sender',
       'from' => $this->getSenderLine($form->_contactId),
       'toName' => $this->petitionEmailVal[$this->fields['Recipient_Name']],
@@ -66,13 +66,13 @@ class CRM_Petitionemail_Interface_Single extends CRM_Petitionemail_Interface {
       // 'bcc' => $bcc,
       'text' => $message,
       // 'html' => $html_message, TODO: offer HTML option.
-    );
+    ];
 
     if (!CRM_Utils_Mail::send($mailParams)) {
-      CRM_Core_Session::setStatus(ts('Error sending message to %1', array('domain' => 'com.aghstrategies.petitionemail', 1 => $mailParams['toName'])));
+      CRM_Core_Session::setStatus(ts('Error sending message to %1', ['domain' => 'com.aghstrategies.petitionemail', 1 => $mailParams['toName']]));
     }
     else {
-      CRM_Core_Session::setStatus(ts('Message sent successfully to %1', array('domain' => 'com.aghstrategies.petitionemail', 1 => $mailParams['toName'])));
+      CRM_Core_Session::setStatus(ts('Message sent successfully to %1', ['domain' => 'com.aghstrategies.petitionemail', 1 => $mailParams['toName']]));
     }
     parent::processSignature($form);
   }
