@@ -10,9 +10,11 @@
       <collapse_display>1</collapse_display>
       <weight>3</weight>
       <is_active>1</is_active>
+      <table_name>civicrm_value_petition_email_delivery_options_66</table_name>
       <is_multiple>0</is_multiple>
       <collapse_adv_display>0</collapse_adv_display>
-      <is_reserved>1</is_reserved>
+      <is_reserved>0</is_reserved>
+      <is_public>1</is_public>
     </CustomGroup>
   </CustomGroups>
   <CustomFields>
@@ -24,7 +26,7 @@
       <is_required>0</is_required>
       <is_searchable>0</is_searchable>
       <is_search_range>0</is_search_range>
-      <weight>1</weight>
+      <weight>17</weight>
       <help_post>Select a system for sending emails to decision-makers or the press from this petition.</help_post>
       <is_active>1</is_active>
       <is_view>0</is_view>
@@ -32,6 +34,7 @@
       <note_columns>60</note_columns>
       <note_rows>4</note_rows>
       <column_name>letter_to_recipient_system</column_name>
+      <serialize>0</serialize>
       <in_selector>0</in_selector>
       <option_group_name>letter_to_recipient_system</option_group_name>
       <custom_group_name>Letter_To</custom_group_name>
@@ -44,7 +47,7 @@
       <is_required>0</is_required>
       <is_searchable>1</is_searchable>
       <is_search_range>0</is_search_range>
-      <weight>2</weight>
+      <weight>18</weight>
       <help_post>This is the subject line for outgoing emails</help_post>
       <is_active>1</is_active>
       <is_view>0</is_view>
@@ -52,6 +55,7 @@
       <note_columns>60</note_columns>
       <note_rows>4</note_rows>
       <column_name>letter_to_subject</column_name>
+      <serialize>0</serialize>
       <in_selector>0</in_selector>
       <custom_group_name>Letter_To</custom_group_name>
     </CustomField>
@@ -60,17 +64,15 @@
       <label>Recipient Name</label>
       <data_type>String</data_type>
       <html_type>Text</html_type>
-      <is_required>0</is_required>
-      <is_searchable>0</is_searchable>
       <is_search_range>0</is_search_range>
-      <weight>3</weight>
-      <help_post>The display name of the petition target</help_post>
+      <weight>34</weight>
+      <attributes>size=60</attributes>
       <is_active>1</is_active>
-      <is_view>0</is_view>
-      <text_length>128</text_length>
+      <text_length>255</text_length>
       <note_columns>60</note_columns>
       <note_rows>4</note_rows>
-      <column_name>letter_to_recipient_name</column_name>
+      <column_name>to_name_414</column_name>
+      <serialize>0</serialize>
       <in_selector>0</in_selector>
       <custom_group_name>Letter_To</custom_group_name>
     </CustomField>
@@ -82,14 +84,16 @@
       <is_required>0</is_required>
       <is_searchable>1</is_searchable>
       <is_search_range>0</is_search_range>
-      <weight>5</weight>
+      <weight>49</weight>
       <help_post>The email address of the petition target.</help_post>
+      <attributes>size=60</attributes>
       <is_active>1</is_active>
       <is_view>0</is_view>
       <text_length>128</text_length>
       <note_columns>60</note_columns>
       <note_rows>4</note_rows>
       <column_name>letter_to_recipient_email</column_name>
+      <serialize>0</serialize>
       <in_selector>0</in_selector>
       <custom_group_name>Letter_To</custom_group_name>
     </CustomField>
@@ -101,32 +105,97 @@
       <is_required>0</is_required>
       <is_searchable>0</is_searchable>
       <is_search_range>0</is_search_range>
-      <weight>9</weight>
+      <weight>54</weight>
       <attributes>rows=4, cols=60</attributes>
       <is_active>1</is_active>
       <is_view>0</is_view>
       <note_columns>60</note_columns>
       <note_rows>10</note_rows>
       <column_name>letter_to_default_message</column_name>
+      <serialize>0</serialize>
       <in_selector>0</in_selector>
       <custom_group_name>Letter_To</custom_group_name>
     </CustomField>
     <CustomField>
-      <name>Message_Field</name>
-      <label>Message Field</label>
-      <data_type>Int</data_type>
+      <name>To</name>
+      <label>To</label>
+      <data_type>String</data_type>
       <html_type>Text</html_type>
-      <is_required>0</is_required>
-      <is_searchable>0</is_searchable>
       <is_search_range>0</is_search_range>
-      <weight>10</weight>
-      <help_post>The ID number of the activity custom field storing the petition message.</help_post>
+      <weight>28</weight>
       <is_active>1</is_active>
       <is_view>0</is_view>
       <text_length>255</text_length>
       <note_columns>60</note_columns>
       <note_rows>4</note_rows>
-      <column_name>letter_to_message_field</column_name>
+      <column_name>recipient_409</column_name>
+      <serialize>0</serialize>
+      <in_selector>0</in_selector>
+      <custom_group_name>Letter_To</custom_group_name>
+    </CustomField>
+    <CustomField>
+      <name>CC</name>
+      <label>CC</label>
+      <data_type>String</data_type>
+      <html_type>Text</html_type>
+      <is_search_range>0</is_search_range>
+      <weight>50</weight>
+      <is_active>1</is_active>
+      <text_length>255</text_length>
+      <note_columns>60</note_columns>
+      <note_rows>4</note_rows>
+      <column_name>cc_410</column_name>
+      <serialize>0</serialize>
+      <in_selector>0</in_selector>
+      <custom_group_name>Letter_To</custom_group_name>
+    </CustomField>
+    <CustomField>
+      <name>CC_Email</name>
+      <label>CC Email</label>
+      <data_type>String</data_type>
+      <html_type>Text</html_type>
+      <is_search_range>0</is_search_range>
+      <weight>51</weight>
+      <attributes>size=60</attributes>
+      <is_active>1</is_active>
+      <text_length>255</text_length>
+      <note_columns>60</note_columns>
+      <note_rows>4</note_rows>
+      <column_name>cc_email_411</column_name>
+      <serialize>0</serialize>
+      <in_selector>0</in_selector>
+      <custom_group_name>Letter_To</custom_group_name>
+    </CustomField>
+    <CustomField>
+      <name>BCC</name>
+      <label>BCC</label>
+      <data_type>String</data_type>
+      <html_type>Text</html_type>
+      <is_search_range>0</is_search_range>
+      <weight>52</weight>
+      <is_active>1</is_active>
+      <text_length>255</text_length>
+      <note_columns>60</note_columns>
+      <note_rows>4</note_rows>
+      <column_name>bcc_412</column_name>
+      <serialize>0</serialize>
+      <in_selector>0</in_selector>
+      <custom_group_name>Letter_To</custom_group_name>
+    </CustomField>
+    <CustomField>
+      <name>BCC_Email</name>
+      <label>BCC Email</label>
+      <data_type>String</data_type>
+      <html_type>Text</html_type>
+      <is_search_range>0</is_search_range>
+      <weight>53</weight>
+      <attributes>size=60</attributes>
+      <is_active>1</is_active>
+      <text_length>255</text_length>
+      <note_columns>60</note_columns>
+      <note_rows>4</note_rows>
+      <column_name>bcc_email_413</column_name>
+      <serialize>0</serialize>
       <in_selector>0</in_selector>
       <custom_group_name>Letter_To</custom_group_name>
     </CustomField>
@@ -137,6 +206,7 @@
       <title>Recipient System</title>
       <is_reserved>1</is_reserved>
       <is_active>1</is_active>
+      <is_locked>0</is_locked>
     </OptionGroup>
   </OptionGroups>
   <OptionValues>
@@ -144,6 +214,7 @@
       <label>Single Recipient</label>
       <value>Single</value>
       <name>Single_Recipient</name>
+      <filter>0</filter>
       <is_default>0</is_default>
       <weight>1</weight>
       <is_optgroup>0</is_optgroup>

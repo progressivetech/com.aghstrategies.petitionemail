@@ -42,11 +42,9 @@ class CRM_Petitionemail_Interface {
   /**
    * The fields that are required to run a signature of this type.
    *
-   * $type array
+   * @var array
    */
-  protected $neededFields = [
-    'Message_Field',
-  ];
+  protected $neededFields = [];
 
   /**
    * The ID of the petition using this interface.
@@ -75,21 +73,12 @@ class CRM_Petitionemail_Interface {
    */
   public function findFields() {
     if (empty($this->fields)) {
-      try {
-        $fieldParams = [
-          'custom_group_id' => "letter_to",
-          'sequential' => 1,
-        ];
-        $result = civicrm_api3('CustomField', 'get', $fieldParams);
-        if (!empty($result['values'])) {
-          foreach ($result['values'] as $f) {
-            $this->fields[$f['name']] = "custom_{$f['id']}";
-          }
-        }
-      }
-      catch (CiviCRM_API3_Exception $e) {
-        $error = $e->getMessage();
-        CRM_Core_Error::debug_log_message(E::ts('API Error: %1', [1 => $error]));
+      $customFields = \Civi\Api4\CustomField::get(FALSE)
+        ->addWhere('custom_group_id:name', '=', 'Letter_To')
+        ->execute();
+
+      foreach ($customFields as $customField) {
+        $this->fields[$customField['name']] = "Letter_To.{$customField['name']}";
       }
     }
     return $this->fields;
@@ -102,26 +91,35 @@ class CRM_Petitionemail_Interface {
    *   The survey info.
    */
   public function getFieldsData() {
-    try {
-      $surveyParams = [
-        'id' => $this->surveyId,
-        'return' => array_values($this->fields),
-      ];
-      $this->petitionEmailVal = civicrm_api3('Survey', 'getsingle', $surveyParams);
-    }
-    catch (CiviCRM_API3_Exception $e) {
-      $error = $e->getMessage();
-      CRM_Core_Error::debug_log_message(E::ts('API Error: %1', [1 => $error]));
-    }
+    $this->petitionEmailVal = \Civi\Api4\Survey::get(FALSE)
+      ->addSelect('custom.*')
+      ->addWhere('id', '=', $this->surveyId)
+      ->execute()
+      ->first();
     return $this->petitionEmailVal;
   }
 
-  public function petitionForm() {
-  }
+  /**
+   * Prepare the petition signature form.
+   *
+   * @param CRM_Campaign_Form_Petition_Signature $form
+   *   The form.
+   */
+  public function buildSigForm($form) {}
 
-  public function processSignature($form) {
-    // Send the email(s).
-  }
+  /**
+   * @param CRM_Campaign_Form_Petition $form
+   *
+   */
+  public function buildFormPetitionConfig($form) {}
+
+  /**
+   * Send the emails
+   *
+   * @param CRM_Campaign_Form_Petition_Signature $form
+   *
+   */
+  public function processSignature($form) {}
 
   /**
    * Get the value for the record_type_id for an activity source.
@@ -239,17 +237,9 @@ class CRM_Petitionemail_Interface {
   }
 
   /**
-   * Prepare the petition signature form.
-   *
-   * @param CRM_Campaign_Form_Petition_Signature $form
-   *   The form.
-   */
-  public function buildSigForm($form) {
-    // Process the form.
-  }
-
-  /**
    * Find the field containing the petition message.
+   *
+   * @deprecated
    *
    * @return string
    *   The field name (e.g. "custom_4") or FALSE if none found.

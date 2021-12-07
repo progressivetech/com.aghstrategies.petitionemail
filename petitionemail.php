@@ -1,6 +1,7 @@
 <?php
 
 require_once 'petitionemail.civix.php';
+use CRM_Petitionemail_ExtensionUtil as E;
 
 /**
  * Implements hook_civicrm_config().
@@ -96,25 +97,9 @@ function petitionemail_civicrm_managed(&$entities) {
 }
 
 /**
- * Implements hook_civicrm_caseTypes().
- *
- * Generate a list of case-types
- *
- * Note: This hook only runs in CiviCRM 4.4+.
- *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_caseTypes
- */
-function petitionemail_civicrm_caseTypes(&$caseTypes) {
-  _petitionemail_civix_civicrm_caseTypes($caseTypes);
-}
-
-/**
  * Implements hook_civicrm_angularModules().
  *
  * Generate a list of Angular modules.
- *
- * Note: This hook only runs in CiviCRM 4.5+. It may
- * use features only available in v4.6+.
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_caseTypes
  */
@@ -138,14 +123,14 @@ function petitionemail_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
 function petitionemail_civicrm_buildForm($formName, &$form) {
   switch ($formName) {
     case 'CRM_Campaign_Form_Petition_Signature':
-      $survey_id = $form->getVar('_surveyId');
-      if (!empty($survey_id)) {
+      $surveyID = $form->getVar('_surveyId');
+      if (!empty($surveyID)) {
         // Find the interface for this petition.
-        $class = CRM_Petitionemail_Interface::findInterface($survey_id);
+        $class = CRM_Petitionemail_Interface::findInterface($surveyID);
         if ($class === FALSE) {
           return;
         }
-        $interface = new $class($survey_id);
+        $interface = new $class($surveyID);
 
         // Make sure all the necessary fields are present.
         if ($interface->isIncomplete) {
@@ -157,9 +142,25 @@ function petitionemail_civicrm_buildForm($formName, &$form) {
       break;
 
     case 'CRM_Campaign_Form_Petition':
-      // TODO: add js for picking message field.
-      CRM_Core_Resources::singleton()->addScriptFile('com.aghstrategies.petitionemail', 'js/messageField.js');
-    // TODO: make sure it shows survey custom fields.
+      $surveyID = $form->getVar('_surveyId');
+      if (!empty($surveyID)) {
+        // Find the interface for this petition.
+        $class = CRM_Petitionemail_Interface::findInterface($surveyID);
+        if ($class === FALSE) {
+          return;
+        }
+        $interface = new $class($surveyID);
+
+        // Make sure all the necessary fields are present.
+        if ($interface->isIncomplete) {
+          return;
+        }
+
+        if (method_exists($interface, 'buildFormPetitionConfig')) {
+          $interface->buildFormPetitionConfig($form);
+        }
+      }
+      break;
   }
 }
 
@@ -178,3 +179,49 @@ function petitionemail_civicrm_postProcess($formName, &$form) {
       break;
   }
 }
+
+function petitionemail_civicrm_customPre(string $op, int $groupID, int $entityID, array &$params) {
+  $customGroup = \Civi\Api4\CustomGroup::get(FALSE)
+    ->addWhere('id', '=', $groupID)
+    ->execute()
+    ->first();
+  if ($customGroup['name'] !== 'Letter_To') {
+    return;
+  }
+
+  // We hide the actual To,CC,BCC fields and replace them with EntityReference fields.
+  // Here we save the values of the EntityReference fields (Email IDs) to the actual custom fields.
+  $customFields = \Civi\Api4\CustomField::get(FALSE)
+    ->addWhere('custom_group_id:name', '=', 'Letter_To')
+    ->execute()
+    ->indexBy('id');
+
+  $toEmailID = CRM_Utils_Request::retrieveValue('to_email_id', 'CommaSeparatedIntegers', NULL, FALSE, 'POST');
+  $ccEmailID = CRM_Utils_Request::retrieveValue('cc_email_id', 'CommaSeparatedIntegers', NULL, FALSE, 'POST');
+  $bccEmailID = CRM_Utils_Request::retrieveValue('bcc_email_id', 'CommaSeparatedIntegers', NULL, FALSE, 'POST');
+  foreach ($params as &$customFieldParams) {
+    if (isset($customFields[$customFieldParams['custom_field_id']])) {
+      $customField = $customFields[$customFieldParams['custom_field_id']];
+      switch ($customField['name']) {
+        case 'To':
+          if (!empty($toEmailID)) {
+            $customFieldParams['value'] = $toEmailID;
+          }
+          break;
+
+        case 'CC':
+          if (!empty($ccEmailID)) {
+            $customFieldParams['value'] = $ccEmailID;
+          }
+          break;
+
+        case 'BCC':
+          if (!empty($bccEmailID)) {
+            $customFieldParams['value'] = $bccEmailID;
+          }
+          break;
+      }
+    }
+  }
+}
+
