@@ -40,7 +40,7 @@ class CRM_Petitionemail_Interface_Single extends CRM_Petitionemail_Interface {
     $this->isIncomplete = FALSE;
   }
 
-  public function buildFormPetitionConfig($form) {
+  public static function buildFormPetitionConfig($form) {
     $form->addEntityRef('to_email_id', E::ts('To'), [
       'entity' => 'Email',
       'multiple' => TRUE,

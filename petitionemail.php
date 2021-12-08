@@ -142,23 +142,10 @@ function petitionemail_civicrm_buildForm($formName, &$form) {
       break;
 
     case 'CRM_Campaign_Form_Petition':
-      $surveyID = $form->getVar('_surveyId');
-      if (!empty($surveyID)) {
-        // Find the interface for this petition.
-        $class = CRM_Petitionemail_Interface::findInterface($surveyID);
-        if ($class === FALSE) {
-          return;
-        }
-        $interface = new $class($surveyID);
-
-        // Make sure all the necessary fields are present.
-        if ($interface->isIncomplete) {
-          return;
-        }
-
-        if (method_exists($interface, 'buildFormPetitionConfig')) {
-          $interface->buildFormPetitionConfig($form);
-        }
+      // @fixme: For a new Petition we haven't selected the "Email Recipient System" so we don't know which interface to load.
+      //   This is currently hardcoded to the "Single" interface.
+      if (method_exists('CRM_Petitionemail_Interface_Single', 'buildFormPetitionConfig')) {
+        CRM_Petitionemail_Interface_Single::buildFormPetitionConfig($form);
       }
       break;
   }

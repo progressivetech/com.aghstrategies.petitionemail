@@ -108,12 +108,6 @@ class CRM_Petitionemail_Interface {
   public function buildSigForm($form) {}
 
   /**
-   * @param CRM_Campaign_Form_Petition $form
-   *
-   */
-  public function buildFormPetitionConfig($form) {}
-
-  /**
    * Send the emails
    *
    * @param CRM_Campaign_Form_Petition_Signature $form
