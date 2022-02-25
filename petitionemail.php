@@ -93,9 +93,113 @@ function petitionemail_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_managed
  */
 function petitionemail_civicrm_managed(&$entities) {
+  // Ensure upgrade_1000 has been run prior to sync'ing our managed entities.
+  // Since we are moving from xml auto load to entities, we want to avoid entity
+  // exists errors.
+  $sql = "SELECT schema_version FROM civicrm_extension WHERE full_name = %0";
+  $dao = \CRM_Core_DAO::executeQuery($sql, [ 0 => [ 'com.aghstrategies.petitionemail', 'String' ] ]);
+  $schema_version = NULL;
+  if ($dao->N > 0) {
+    $dao->fetch();
+    $schema_version = $dao->schema_version;
+  }
+  if (empty($schema_version) || $schema_version < 1001) {
+    petitionemail_prefill_entities();
+  }
+
   _petitionemail_civix_civicrm_managed($entities);
+
+  // We can't set our custom activity fields to extend activities
+  // of the type Petition because it has to be hard coded as an
+  // ID, so we intercept and update it.
+  foreach($entities as $index => $entity) {
+    if ($entity['name'] = 'CustomGroup_Petition_Activity_Fields') {
+      $petitionActivityTypeId = \Civi\Api4\OptionValue::get()
+        ->addWhere('option_group_id:name', '=', 'activity_type')
+        ->addWhere('name', '=', 'Petition')
+        ->addSelect('id')
+        ->execute()->first()['id'];
+      if ($petitionActivityId) {
+        $entities[$index]['parmams'][0]['values'][0]['extends_entity_column_value'] = [ $participantActivityTypeId ];
+      }
+    }
+  }
+
+
+  // And, Apiv4 UFField requires field_name which has to be set to custom_nnn
+  // where nnn is the custom field id. So, we do a bit of a massage here
+  // and we either:
+  // 1. Yank the UFField out of the managed entities if the custom field has not
+  // yet been created or...
+  // 2. Set field_name to the appropriate value if it has been created.
+  $massagedEntities = [
+    'UFGroup_Petition_Activity_Fields_UFField_Message',
+    'UFGroup_Petition_Activity_Fields_UFField_Subject'
+  ];
+  foreach($entities as $index => $entity) {
+    if (in_array($entity['name'], $massagedEntities)) {
+      $fieldName = $entity['parmams'][0]['values'][0]['field_name:name'];
+      $id = \Civi\Api4\CustomField::get()
+        ->addWhere('name', '=', $fieldName)
+        ->addSelect('id')
+        ->execute()->first()['id'];
+      if ($id) {
+        $entity['parmams'][0]['values'][0]['field_name'] = 'custom_' . $id;
+      }
+      else {
+        unset($entities[$index]);
+      }
+    }
+  }
+
+
+  
 }
 
+/**
+ *
+ * We are switching from installing database elements via the xml
+ * auto_install.xml method to managed entities. On upgrade we want to avoid
+ * an "already exists" error when we try to reconcile the managed entities
+ * and find that they already exist.
+ *
+ **/ 
+function petitionemail_prefill_entities() {
+  $preFillEntities = [
+      'letter_to_recipient_system' => 'OptionGroup',
+      'Single_Recipient' => 'OptionValue',
+      'Letter_To' => 'CustomGroup',
+      'Recipient_System' => 'CustomField',
+      'Subject' => 'CustomField',
+      'Recipient_Name' => 'CustomField',
+      'Recipient_Email' => 'CustomField',
+      'Default_Message' => 'CustomField',
+  ];
+  foreach($preFillEntities as $name => $entity) {
+    $class = "\Civi\Api4\\$entity";
+    $id = $class::get()
+      ->addWhere('name', '=', $name)
+      ->addSelect('id')
+      ->execute()->first()['id'];
+    if ($id) {
+      // It has already been creaetd in the database.
+      $managed = \Civi\Api4\Managed::get()
+        ->addWhere('module', '=', 'com.aghstrategies.petitionemail')
+        ->addWhere('name', '=', $name)
+        ->execute();
+      if ($managed->count() == 0) {
+        // It has not been inserted into managed entities.
+        \Civi\Api4\Managed::create()
+          ->addValue('module', 'com.aghstrategies.petitionemail')
+          ->addValue('name', $name)
+          ->addValue('entity_type', $entity)
+          ->addValue('entity_id', $id)
+          ->addValue('cleanup', 'unused')
+          ->execute();
+      }
+    }
+  }
+}
 /**
  * Implements hook_civicrm_angularModules().
  *

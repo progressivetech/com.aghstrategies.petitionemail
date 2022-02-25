@@ -36,4 +36,9 @@ class CRM_Petitionemail_Upgrader extends CRM_Petitionemail_Upgrader_Base {
     return TRUE;
   }
 
+  public function upgrade_1001() {
+    $this->ctx->log->info('Applying update 1001');
+    petitionemail_prefill_entities();
+    return TRUE;
+  }
 }
