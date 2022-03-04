@@ -7,7 +7,7 @@ return [
     'update' => 'unmodified', 
     'params' => [
       'version' => 4, 
-      'match' => ['name'];
+      'match' => ['name'],
       'values' => [
         'name' => 'letter_to_recipient_system', 
         'title' => 'Recipient System', 
@@ -26,7 +26,7 @@ return [
     'update' => 'unmodified', 
     'params' => [
       'version' => 4, 
-      'match' => ['name'];
+      'match' => ['name'],
       'values' => [
         'option_group_id.name' => 'letter_to_recipient_system', 
         'label' => 'Single Recipient', 
@@ -54,7 +54,7 @@ return [
     'update' => 'unmodified', 
     'params' => [
       'version' => 4, 
-      'match' => ['name'];
+      'match' => ['name'],
       'values' => [
         'name' => 'Letter_To', 
         'title' => 'Petition Email Delivery Options', 
@@ -85,7 +85,7 @@ return [
     'update' => 'unmodified', 
     'params' => [
       'version' => 4, 
-      'match' => ['name'];
+      'match' => ['name'],
       'values' => [
         'custom_group_id.name' => 'Letter_To', 
         'name' => 'Recipient_System', 
@@ -126,7 +126,7 @@ return [
     'update' => 'unmodified', 
     'params' => [
       'version' => 4, 
-      'match' => ['name'];
+      'match' => ['name'],
       'values' => [
         'custom_group_id.name' => 'Letter_To', 
         'name' => 'Subject', 
@@ -167,7 +167,7 @@ return [
     'update' => 'unmodified', 
     'params' => [
       'version' => 4, 
-      'match' => ['name'];
+      'match' => ['name'],
       'values' => [
         'custom_group_id.name' => 'Letter_To', 
         'name' => 'Recipient_Name', 
@@ -208,7 +208,7 @@ return [
     'update' => 'unmodified', 
     'params' => [
       'version' => 4, 
-      'match' => ['name'];
+      'match' => ['name'],
       'values' => [
         'custom_group_id.name' => 'Letter_To', 
         'name' => 'Recipient_Email', 
@@ -249,7 +249,7 @@ return [
     'update' => 'unmodified', 
     'params' => [
       'version' => 4, 
-      'match' => ['name'];
+      'match' => ['name'],
       'values' => [
         'custom_group_id.name' => 'Letter_To', 
         'name' => 'Default_Message', 
@@ -290,7 +290,7 @@ return [
     'update' => 'unmodified', 
     'params' => [
       'version' => 4, 
-      'match' => ['name'];
+      'match' => ['name'],
       'values' => [
         'name' => 'Petition_Activity_Fields', 
         'title' => 'Petition Activity Fields', 
@@ -321,7 +321,7 @@ return [
     'update' => 'unmodified', 
     'params' => [
       'version' => 4, 
-      'match' => ['name'];
+      'match' => ['name'],
       'values' => [
         'custom_group_id.name' => 'Petition_Activity_Fields', 
         'name' => 'Custom_Email_Message', 
@@ -362,7 +362,7 @@ return [
     'update' => 'unmodified', 
     'params' => [
       'version' => 4, 
-      'match' => ['name'];
+      'match' => ['name'],
       'values' => [
         'custom_group_id.name' => 'Petition_Activity_Fields', 
         'name' => 'Custom_Email_Subject', 
