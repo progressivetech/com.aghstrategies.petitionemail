@@ -105,8 +105,8 @@ function petitionemail_civicrm_managed(&$entities) {
         ->addWhere('name', '=', 'Petition')
         ->addSelect('id')
         ->execute()->first()['id'];
-      if ($petitionActivityId) {
-        $entities[$index]['parmams'][0]['values'][0]['extends_entity_column_value'] = [ $participantActivityTypeId ];
+      if ($petitionActivityTypeId) {
+        $entities[$index]['parmams'][0]['values'][0]['extends_entity_column_value'] = [ $petitionActivityTypeId ];
       }
     }
   }
