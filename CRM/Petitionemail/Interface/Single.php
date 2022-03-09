@@ -103,7 +103,12 @@ class CRM_Petitionemail_Interface_Single extends CRM_Petitionemail_Interface {
    *   The petition form.
    */
   public function processSignature($form) {
-    $message = empty($form->_submitValues['default_message']) ? $this->petitionEmailVal[$this->fields['default_message']] : $form->_submitValues['default_message'];
+    $messageField = $this->findMessageField();
+    if ($messageField === FALSE) {
+      return;
+    }
+    $message = empty($form->_submitValues[$messageField]) ? $this->petitionEmailVal[$this->fields['Default_Message']] : $form->_submitValues[$messageField];
+    // $message = empty($form->_submitValues['default_message']) ? $this->petitionEmailVal[$this->fields['default_message']] : $form->_submitValues['default_message'];
     // If message is left empty and no default message, don't send anything.
     if (empty($message)) {
       return;
