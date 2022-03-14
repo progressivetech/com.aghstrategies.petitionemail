@@ -169,29 +169,26 @@ function petitionemail_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
 function petitionemail_civicrm_buildForm($formName, &$form) {
   switch ($formName) {
     case 'CRM_Campaign_Form_Petition_Signature':
-      $surveyID = $form->getVar('_surveyId');
-      if (!empty($surveyID)) {
+      $surveyId = $form->getVar('_surveyId');
+      if (!empty($surveyId)) {
+        if (!empty($_COOKIE['signed_' . $surveyId])) {
+          // This petition has been signed, we should bail.
+          return;
+        }
         // Find the interface for this petition.
-        $class = CRM_Petitionemail_Interface::findInterface($surveyID);
+        $class = CRM_Petitionemail_Interface::findInterface($surveyId);
         if ($class === FALSE) {
           return;
         }
-        $interface = new $class($surveyID);
+        $interface = new $class($surveyId);
 
         // Make sure all the necessary fields are present.
-        if ($interface->isIncomplete) {
+        if (!$interface->isComplete) {
           return;
         }
 
+        $interface->addMessageAndSubjectToSigForm($form);
         $interface->buildSigForm($form);
-      }
-      break;
-
-    case 'CRM_Campaign_Form_Petition':
-      // @fixme: For a new Petition we haven't selected the "Email Recipient System" so we don't know which interface to load.
-      //   This is currently hardcoded to the "Single" interface.
-      if (method_exists('CRM_Petitionemail_Interface_Single', 'buildFormPetitionConfig')) {
-        CRM_Petitionemail_Interface_Single::buildFormPetitionConfig($form);
       }
       break;
   }

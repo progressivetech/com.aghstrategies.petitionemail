@@ -8,9 +8,12 @@
  +--------------------------------------------------------------------+
 *}
 
-<div class="crm-section editrow_default_message-section form-item" id="petitionemail_default_message">
-  <div class="label">{$form.default_message.label}</div>
-  <div class="content">{$form.default_message.html}</div>
+<div class="crm-section editrow_signer_message-section form-item" id="petitionemail_signer_message">
+  <div class="label">{$form.signer_subject.label}</div>
+  <div class="content">{$form.signer_subject.html}</div>
+  <div class="clear"></div>
+  <div class="label">{$form.signer_message.label}</div>
+  <div class="content">{$form.signer_message.html}</div>
   <div class="clear"></div>
 </div>
 
@@ -18,7 +21,8 @@
 <script type="text/javascript">
   CRM.$(function($) {
     $(document).ready(function() {
-      CRM.$('div#petitionemail_default_message').appendTo('div.crm-petition-activity-profile');
+      CRM.$('div#petitionemail_signer_subject').appendTo('div.crm-petition-activity-profile');
+      CRM.$('div#petitionemail_signer_message').appendTo('div.crm-petition-activity-profile');
     });
   });
 </script>

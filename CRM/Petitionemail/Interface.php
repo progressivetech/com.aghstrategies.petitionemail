@@ -23,7 +23,7 @@ class CRM_Petitionemail_Interface {
    *
    * @type array
    */
-  protected $fields = [];
+  protected $petitionFields = [];
 
   /**
    * The default "from" address for the site.
@@ -37,7 +37,7 @@ class CRM_Petitionemail_Interface {
    *
    * @type array
    */
-  protected $petitionEmailVal = [];
+  protected $petitionFieldValues = [];
 
   /**
    * The fields that are required to run a signature of this type.
@@ -58,12 +58,27 @@ class CRM_Petitionemail_Interface {
    *
    * @type boolean
    */
-  public $isIncomplete = TRUE;
+  public $isComplete = FALSE;
+
+  /**
+   * The activity object created for each given signature
+   */
+  protected $activity;
 
   public function __construct($surveyId) {
     $this->surveyId = $surveyId;
-    $this->findFields();
-    $this->getFieldsData();
+    $this->setPetitionFields();
+    $this->setPetitionValues();
+
+    foreach ($this->neededFields as $neededField) {
+      if (empty($this->getPetitionValue($neededField))) {
+        \Civi::log()->debug(__CLASS__ . ' missing neededField: ' . $neededField);
+        // TODO: provide something more meaningful.
+        return;
+      }
+    }
+    // If all needed fields are found, the system is no longer incomplete.
+    $this->isComplete = TRUE;
   }
 
   /**
@@ -71,17 +86,17 @@ class CRM_Petitionemail_Interface {
    *
    * @return array
    */
-  public function findFields() {
+  public function setPetitionFields() {
     if (empty($this->fields)) {
       $customFields = \Civi\Api4\CustomField::get(FALSE)
         ->addWhere('custom_group_id:name', '=', 'Letter_To')
         ->execute();
 
       foreach ($customFields as $customField) {
-        $this->fields[$customField['name']] = "Letter_To.{$customField['name']}";
+        $this->petitionFields[$customField['name']] = "Letter_To.{$customField['name']}";
       }
     }
-    return $this->fields;
+    return $this->petitionFields;
   }
 
   /**
@@ -90,13 +105,70 @@ class CRM_Petitionemail_Interface {
    * @return array
    *   The survey info.
    */
-  public function getFieldsData() {
-    $this->petitionEmailVal = \Civi\Api4\Survey::get(FALSE)
+  public function setPetitionValues() {
+    $this->petitionFieldValues = \Civi\Api4\Survey::get(FALSE)
       ->addSelect('custom.*')
       ->addWhere('id', '=', $this->surveyId)
       ->execute()
       ->first();
-    return $this->petitionEmailVal;
+    return $this->petitionFieldValues;
+  }
+
+  /**
+   * Get the value of a given petition field. 
+   *
+   * Retrieve the value for a given petition field.
+   *
+   **/
+  protected function getPetitionValue($field) {
+    if (empty($this->petitionFields[$field])) {
+      \Civi::log()->debug("Failed getting value for non-existent field ${field}.");
+      return NULL;
+    };
+    $fieldKey = $this->petitionFields[$field];
+    return $this->petitionFieldValues[$fieldKey];
+  }
+
+  /**
+   * Get the value of a submitted petition field. 
+   *
+   * Given a form and a field, return the value of the field
+   * for the given form.
+   *
+   **/
+  protected function getSubmittedValue($form, $field) {
+    if (empty($form->_submitValues[$field])) {
+      // If empty, use the default value.
+      if ($field == 'signer_message') {
+        return $this->getPetitionValue('Default_Message');
+      }
+      elseif ($field == 'signer_subject') {
+        return $this->getPetitionValue('Default_Subject');
+      }
+      return ''; 
+    }
+    return $form->_submitValues[$field];
+  }
+
+  /**
+   * Add body and subject to the petition form.
+   *
+   * @param CRM_Campaign_Form_Petition_Signature $form
+   *   The petition form.
+   */
+  public function addMessageAndSubjectToSigForm($form) {
+    $form->add('text', 'signer_subject', E::ts('Subject'));
+    $form->add('textarea', 'signer_message', E::ts('Message'),
+      ['cols' => 60, 'rows' => 4]
+    );
+    CRM_Core_Region::instance('page-body')->add(
+      ['template' => 'CRM/Petitionemail/Interface/Defaultmessage.tpl']
+    );
+    $defaults = [
+      'signer_subject' => $this->getPetitionValue('Subject'),
+      'signer_message' => $this->getPetitionValue('Default_Message')
+    ];
+    $form->setDefaults($defaults);
   }
 
   /**
@@ -114,6 +186,161 @@ class CRM_Petitionemail_Interface {
    *
    */
   public function processSignature($form) {}
+
+  /**
+   * Create activity
+   *
+   * This creates an initial, incomplete activity that can be completed
+   * with a call to $this->activity->completeActivity() once all emails are successfully
+   * sent.
+   *
+   * @param $extraContactIds - add any extra contactIDs that should be
+   * "with"ed on the activity.
+   *
+   * Generate an activity linking the signer to anyone who got the message.
+   */
+  protected function createPendingActivity($form, $extraContactIds = []) {
+    $message = $this->getSubmittedValue($form, 'signer_message');
+    $subject = $this->getSubmittedValue($form, 'signer_subject');
+
+    // Append the Petition name so email can easily be matched to Petition
+    $activitySubject = $subject;
+
+    $targets = array_merge($this->getPetitionValue('To'), $extraContactIds);
+    // Create an email activity
+    $activityParams = [
+      'subject' => $activitySubject,
+      'text' => $message,
+      'source_contact_id' => $form->_contactId,
+      'target_contact_id' => $targets,
+    ];
+    $this->activity = new CRM_Petitionemail_Activity();
+    $this->activity->createActivity($activityParams);
+  } 
+
+  /**
+   * Retrieve or add contact
+   *
+   * If a matching contact exists, return the contact id. Otherwise
+   * add the contact and return the contact id.
+   */
+  protected function addOrRetrieveContact($email, $first_name, $last_name, $middle_name = NULL, $title = NULL) {
+    $record = \Civi\Api4\Email::get()
+      ->setCheckPermissions(FALSE)
+      ->addSelect('contact_id')
+      ->addWhere('contact_id.first_name', '=', $first_name)
+      ->addWhere('contact_id.last_name', '=', $last_name)
+      ->addWhere('contact_id.is_deleted', '=', FALSE)
+      ->addWhere('email', '=', $email)
+      ->execute()->first();
+
+    if (!empty($record['contact_id'])) {
+      return $record['contact_id'];
+    }
+    
+    $contact = \Civi\Api4\Contact::create()
+      ->setCheckPermissions(FALSE)
+      ->addValue('first_name', $first_name)
+      ->addValue('last_name', $last_name)
+      ->addValue('middle_name', $middle_name)
+      ->addValue('contact_type', 'Individual')
+      ->addChain('create_email', \Civi\Api4\Email::create()->setValues(['contact_id' => '$id', 'email' => $email]));
+
+    // Check if title exists in prefix list.
+    if ($title) {
+      $prefixes = CRM_Core_PseudoConstant::get('CRM_Contact_DAO_Contact', 'prefix_id');
+      if (in_array($title, $prefixes)) {
+        $contact->addValue('prefix_id:name', $title);
+      }
+    }
+    return $contact->execute()->first()['id'];
+  }
+
+  /**
+   * Send email
+   *
+   * Send email to everyone specified in the To and Bcc fields.
+   */
+  protected function sendEmail($form, $extraContactIds = []) {
+    $message = $this->getSubmittedValue($form, 'signer_message');
+    $subject = $this->getSubmittedValue($form, 'signer_subject');
+    $targets = array_merge($this->getPetitionValue('To'), $extraContactIds);
+
+    // If message is left empty and no default message, don't send anything.
+    if (empty($message)) {
+      return;
+    }
+
+    // Setup email message:
+    $mailParams = [
+      'from' => $this->getSenderLine($form->_contactId),
+      'subject' => $subject,
+    ];
+
+    $toEmails = $this->getContactDetails($targets);
+    $bccEmails = $this->getContactDetails($this->getPetitionValue('BCC'));
+    if (!empty($bccEmails)) {
+      $bccHeader = [];
+      foreach($bccEmails as $bcc) {
+        $bccHeader[] = CRM_Utils_Mail::formatRFC822Email($bcc['name'], $bcc['email']);
+      }
+      $mailParams['headers']['bcc'] = implode(',', $bccHeader);
+    }
+
+    // If we have multiple "To" addresses we send the mail multiple times
+    foreach ($toEmails as $toDetail) {
+      $mailParams['toName'] = $toDetail['name'];
+      $mailParams['toEmail'] = $toDetail['email'];
+      $mailParams['text'] = $toDetail['greeting'] . "\n" . $message;
+      if (!CRM_Utils_Mail::send($mailParams)) {
+        $errorMessage = E::ts('Error sending message to %1', [1 => $mailParams['email']]);
+        CRM_Core_Session::setStatus($errorMessage);
+        \Civi::log()->error(E::SHORT_NAME . ': ' . $errorMessage);
+        return FALSE;
+      }
+      else {
+        CRM_Core_Session::setStatus(E::ts('Message sent successfully to %1', [1 => $mailParams['toName']]));
+      }
+    }
+    return TRUE;
+  }
+
+  /**
+   * Get contact details for the specified contact id
+   *
+   * Return array with name and email indexed by contactId.
+   *
+   * @param array $contactIds
+   *
+   * @return array
+   * @throws \API_Exception
+   * @throws \Civi\API\Exception\UnauthorizedException
+   */
+  public function getContactDetails(array $contactIds): array {
+    if (empty($contactIds)) {
+      return [];
+    }
+
+    $results = \Civi\Api4\Email::get(FALSE)
+      ->addSelect('contact_id', 'email', 'contact_id.display_name', 'prefix_id:name', 'last_name')
+      ->addWhere('contact_id', 'IN', $contactIds)
+      ->addWhere('is_primary', '=', TRUE)
+      ->execute();
+    $details = [];
+    foreach ($results as $contact) {
+      $id = $contact['contact_id'];
+      $greeting = 'Dear ' . $contact['contact_id.display_name'] . ',';
+      if (!empty($contact['prefix_id:name']) && !empty($contact['last_name'])) {
+        $greeting = 'Dear ' . $contact['prefix_id:name'] . ' ' . $contact['last_name'] . ',';
+      }
+      $details[$id] =  [
+        'name' => $contact['contact_id.display_name'], 
+        'email' => $contact['email'],
+        'greeting' => $greeting,
+      ];
+    }
+    return $details;
+  }
 
   /**
    * Get the value for the record_type_id for an activity source.
