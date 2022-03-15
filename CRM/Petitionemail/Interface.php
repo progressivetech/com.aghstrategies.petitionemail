@@ -200,7 +200,7 @@ class CRM_Petitionemail_Interface {
    * Generate an activity linking the signer to anyone who got the message.
    */
   protected function createPendingActivity($form, $extraContactIds = []) {
-    $message = $this->getSenderIdentificationBlock($form->_contactId) . "\n\n" .
+    $message = $this->getSenderIdentificationBlock($form) . "\n\n" .
       $this->getSubmittedValue($form, 'signer_message');
     $subject = $this->getSubmittedValue($form, 'signer_subject');
 
@@ -263,13 +263,15 @@ class CRM_Petitionemail_Interface {
    * Get the block of text to be prepended to the message
    * that contains the senders contact information.
    */
-  protected function getSenderIdentificationBlock($contactId) {
+  protected function getSenderIdentificationBlock($form) {
+    $contactId = $form->_contactId;
     // Other classes may want to override to add additional info.
     // The base class only adds the Name and Email.
     $contact = \Civi\Api4\Email::get()
       ->setCheckPermissions(FALSE)
       ->addSelect('contact_id.display_name')
       ->addSelect('email')
+      ->addSelect('is_primary', '=', TRUE)
       ->addWhere('contact_id', '=', $contactId)
       ->execute()->first();
 
@@ -312,7 +314,7 @@ class CRM_Petitionemail_Interface {
       $mailParams['toName'] = $toDetail['name'];
       $mailParams['toEmail'] = $toDetail['email'];
       $mailParams['text'] = 
-        $this->getSenderIdentificationBlock($form->_contactId) . "\n\n" .
+        $this->getSenderIdentificationBlock($form) . "\n\n" .
         $toDetail['greeting'] . "\n\n" . 
         $message;
       if (!CRM_Utils_Mail::send($mailParams)) {
