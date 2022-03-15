@@ -4,7 +4,6 @@ return [
     'name' => 'OptionGroup_letter_to_recipient_system',
     'entity' => 'OptionGroup',
     'cleanup' => 'unused',
-    'update' => 'unmodified',
     'params' => [
       'version' => 4,
       'match' => ['name'],
@@ -23,7 +22,6 @@ return [
     'name' => 'OptionGroup_letter_to_recipient_system_OptionValue_Single_Recipient',
     'entity' => 'OptionValue',
     'cleanup' => 'unused',
-    'update' => 'unmodified',
     'params' => [
       'version' => 4,
       'match' => ['name'],
@@ -51,7 +49,6 @@ return [
     'name' => 'CustomGroup_Letter_To',
     'entity' => 'CustomGroup',
     'cleanup' => 'unused',
-    'update' => 'unmodified',
     'params' => [
       'version' => 4,
       'match' => ['name'],
@@ -82,7 +79,6 @@ return [
     'name' => 'CustomGroup_Letter_To_CustomField_Recipient_System',
     'entity' => 'CustomField',
     'cleanup' => 'unused',
-    'update' => 'unmodified',
     'params' => [
       'version' => 4,
       'match' => ['name'],
@@ -123,7 +119,6 @@ return [
     'name' => 'CustomGroup_Letter_To_CustomField_Subject',
     'entity' => 'CustomField',
     'cleanup' => 'unused',
-    'update' => 'unmodified',
     'params' => [
       'version' => 4,
       'match' => ['name'],
@@ -164,7 +159,6 @@ return [
     'name' => 'CustomGroup_Letter_To_CustomField_Default_Message',
     'entity' => 'CustomField',
     'cleanup' => 'unused',
-    'update' => 'unmodified',
     'params' => [
       'version' => 4,
       'match' => ['name'],
@@ -205,7 +199,6 @@ return [
     'name' => 'CustomGroup_Letter_To_CustomField_To',
     'entity' => 'CustomField',
     'cleanup' => 'unused',
-    'update' => 'unmodified',
     'params' => [
       'version' => 4,
       'match' => ['name'],
@@ -246,7 +239,6 @@ return [
     'name' => 'CustomField_BCC',
     'entity' => 'CustomField',
     'cleanup' => 'unused',
-    'update' => 'unmodified',
     'params' => [
       'version' => 4,
       'match' => ['name'],
@@ -288,7 +280,6 @@ return [
     'name' => 'CustomGroup_Letter_To_CustomField_Recipient_Name',
     'entity' => 'CustomField',
     'cleanup' => 'unused',
-    'update' => 'unmodified',
     'params' => [
       'version' => 4,
       'match' => ['name'],
@@ -328,7 +319,6 @@ return [
     'name' => 'CustomGroup_Letter_To_CustomField_Recipient_Email',
     'entity' => 'CustomField',
     'cleanup' => 'unused',
-    'update' => 'unmodified',
     'params' => [
       'version' => 4,
       'match' => ['name'],
@@ -368,7 +358,6 @@ return [
     'name' => 'UFGroup_Petition_Activity_Fields',
     'entity' => 'UFGroup',
     'cleanup' => 'unused',
-    'update' => 'unmodified',
     'params' => [
       'version' => 4,
       'values' => [
@@ -402,7 +391,6 @@ return [
     'name' => 'UFGroup_Petition_Activity_Fields_UFField_Subject',
     'entity' => 'UFField',
     'cleanup' => 'unused',
-    'update' => 'unmodified',
     'params' => [
       'version' => 4,
       'values' => [
@@ -430,7 +418,6 @@ return [
     'name' => 'UFGroup_Petition_Activity_Fields_UFField_Message',
     'entity' => 'UFField',
     'cleanup' => 'unused',
-    'update' => 'unmodified',
     'params' => [
       'version' => 4,
       'values' => [
@@ -458,7 +445,6 @@ return [
     'name' => 'UFGroup_Petition_Contact_Fields',
     'entity' => 'UFGroup',
     'cleanup' => 'unused',
-    'update' => 'unmodified',
     'params' => [
       'version' => 4,
       'values' => [
@@ -496,7 +482,6 @@ return [
     'name' => 'UFGroup_Petition_Contact_Fields_UFField_First_Name',
     'entity' => 'UFField',
     'cleanup' => 'unused',
-    'update' => 'unmodified',
     'params' => [
       'version' => 4,
       'values' => [
@@ -524,7 +509,6 @@ return [
     'name' => 'UFGroup_Petition_Contact_Fields_UFField_Last_Name',
     'entity' => 'UFField',
     'cleanup' => 'unused',
-    'update' => 'unmodified',
     'params' => [
       'version' => 4,
       'values' => [
@@ -552,7 +536,6 @@ return [
     'name' => 'UFGroup_Petition_Contact_Fields_UFField_Email',
     'entity' => 'UFField',
     'cleanup' => 'unused',
-    'update' => 'unmodified',
     'params' => [
       'version' => 4,
       'values' => [
@@ -580,7 +563,6 @@ return [
     'name' => 'UFGroup_Petition_Contact_Fields_UFField_Street_Address',
     'entity' => 'UFField',
     'cleanup' => 'unused',
-    'update' => 'unmodified',
     'params' => [
       'version' => 4,
       'values' => [
@@ -608,7 +590,6 @@ return [
     'name' => 'UFGroup_Petition_Contact_Fields_UFField_City',
     'entity' => 'UFField',
     'cleanup' => 'unused',
-    'update' => 'unmodified',
     'params' => [
       'version' => 4,
       'values' => [
@@ -636,7 +617,6 @@ return [
     'name' => 'UFGroup_Petition_Contact_Fields_UFField_State',
     'entity' => 'UFField',
     'cleanup' => 'unused',
-    'update' => 'unmodified',
     'params' => [
       'version' => 4,
       'values' => [
@@ -664,7 +644,6 @@ return [
     'name' => 'UFGroup_Petition_Contact_Fields_UFField_Postal_Code',
     'entity' => 'UFField',
     'cleanup' => 'unused',
-    'update' => 'unmodified',
     'params' => [
       'version' => 4,
       'values' => [
