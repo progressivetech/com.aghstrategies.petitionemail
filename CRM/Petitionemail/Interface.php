@@ -293,7 +293,7 @@ class CRM_Petitionemail_Interface {
       $mailParams['toEmail'] = $toDetail['email'];
       $mailParams['text'] = $toDetail['greeting'] . "\n" . $message;
       if (!CRM_Utils_Mail::send($mailParams)) {
-        $errorMessage = E::ts('Error sending message to %1', [1 => $mailParams['email']]);
+        $errorMessage = E::ts('Error sending message to %1', [1 => $mailParams['toEmail']]);
         CRM_Core_Session::setStatus($errorMessage);
         \Civi::log()->error(E::SHORT_NAME . ': ' . $errorMessage);
         return FALSE;
@@ -390,36 +390,19 @@ class CRM_Petitionemail_Interface {
    *   The default "from" name and address.
    */
   public function getDefaultFromAddress() {
-    if (empty($this->defaultFromAddress)) {
-      $cache = CRM_Utils_Cache::singleton();
-      $this->defaultFromAddress = $cache->get('petitionemail_defaultFromAddress');
+    $label = \Civi\Api4\OptionValue::get()
+      ->setCheckPermissions(FALSE) 
+      ->addSelect('label')
+      ->addWhere('option_group_id:name', '=', from_email_address)
+      ->addWhere('is_default', '=', TRUE)
+      ->execute()->first()['label'];
+
+    // The label returns the whole "name" <email> bit. We only want the email
+    // because we'll use the name from the signer.
+    if (preg_match('/<([^>]+)>/', $label, $matches)) {
+      return $matches[1];
     }
-    if (empty($this->defaultFromAddress)) {
-      try {
-        $defaultMailParams = [
-          'name' => "from_email_address",
-          'options' => ['limit' => 1],
-          'api.OptionValue.getsingle' => [
-            'is_default' => 1,
-            'options' => ['limit' => 1],
-          ],
-        ];
-        $defaultMail = civicrm_api3('OptionGroup', 'getsingle', $defaultMailParams);
-        if (empty($defaultMail['api.OptionValue.getsingle']['label'])
-          || $defaultMail['api.OptionValue.getsingle']['label'] == $defaultMail['api.OptionValue.getsingle']['name']) {
-          // No site email.
-          // TODO: leave some kind of message with explanation.
-          return NULL;
-        }
-        $this->defaultFromAddress = $defaultMail['api.OptionValue.getsingle']['label'];
-        $cache->set('petitionemail_defaultFromAddress', $this->defaultFromAddress);
-      }
-      catch (CiviCRM_API3_Exception $e) {
-        $error = $e->getMessage();
-        CRM_Core_Error::debug_log_message(E::ts('API Error: %1', [1 => $error]));
-      }
-    }
-    return $this->defaultFromAddress;
+    return NULL;
   }
 
   /**
@@ -488,34 +471,25 @@ class CRM_Petitionemail_Interface {
    * @param int $contactId
    *   The contact ID of the sender (petition signer).
    *
+   * Note: if we send from the email address of the signer, it will most likely
+   * get blocked by the received due to SPF/DKIM. So we use the name of the signer
+   * and the email address specified by the petition.
+   *
    * @return string
    *   The from address in "Name <email>" format.
    */
   public function getSenderLine($contactId) {
     // Get the sender.
-    try {
-      $contact = civicrm_api3('Contact', 'getsingle', [
-        'return' => [
-          'display_name',
-          'email',
-        ],
-        'id' => $contactId,
-      ]);
+    $displayName = \Civi\Api4\Contact::get()
+      ->setCheckPermissions(FALSE)
+      ->addSelect('display_name')
+      ->addWhere('id', '=', $contactId)
+      ->execute()->first()['display_name'];
+    $email = $this->getPetitionValue('Petition_From_Email');
+    if (empty($email)) {
+      $email = $this->getDefaultFromAddress();
     }
-    catch (CiviCRM_API3_Exception $e) {
-      $error = $e->getMessage();
-      CRM_Core_Error::debug_log_message(E::ts('API Error: %1', [1 => $error]));
-    }
-
-    if (empty($contact['email'])) {
-      return $this->getDefaultFromAddress();
-    }
-    elseif (empty($contact['display_name'])) {
-      return $contact['email'];
-    }
-    else {
-      return "\"{$contact['display_name']}\" <{$contact['email']}>";
-    }
+    return CRM_Utils_Mail::formatRFC822Email($displayName, $email);
   }
 
 }
