@@ -8,21 +8,22 @@
  +--------------------------------------------------------------------+
 *}
 
-<div class="crm-section editrow_signer_message-section form-item" id="petitionemail_signer_message">
+<div class="crm-section editrow_signer_subject-section form-item" id="editrow-signer_subject">
   <div class="label">{$form.signer_subject.label}</div>
   <div class="content">{$form.signer_subject.html}</div>
-  <div class="clear"></div>
+</div>
+
+<div class="crm-section editrow_signer_message-section form-item" id="editrow-signer_message">
   <div class="label">{$form.signer_message.label}</div>
   <div class="content">{$form.signer_message.html}</div>
-  <div class="clear"></div>
 </div>
 
 {literal}
 <script type="text/javascript">
   CRM.$(function($) {
     $(document).ready(function() {
-      CRM.$('div#petitionemail_signer_subject').appendTo('div.crm-petition-activity-profile');
-      CRM.$('div#petitionemail_signer_message').appendTo('div.crm-petition-activity-profile');
+      CRM.$('div#editrow-signer_subject').appendTo('div.crm-petition-activity-profile');
+      CRM.$('div#editrow-signer_message').appendTo('div.crm-petition-activity-profile');
     });
   });
 </script>
