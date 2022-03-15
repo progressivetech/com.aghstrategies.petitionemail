@@ -200,7 +200,8 @@ class CRM_Petitionemail_Interface {
    * Generate an activity linking the signer to anyone who got the message.
    */
   protected function createPendingActivity($form, $extraContactIds = []) {
-    $message = $this->getSubmittedValue($form, 'signer_message');
+    $message = $this->getSenderIdentificationBlock($form->_contactId) . "\n\n" .
+      $this->getSubmittedValue($form, 'signer_message');
     $subject = $this->getSubmittedValue($form, 'signer_subject');
 
     // Append the Petition name so email can easily be matched to Petition
@@ -257,6 +258,25 @@ class CRM_Petitionemail_Interface {
   }
 
   /**
+   * Get Sender Identification block.
+   *
+   * Get the block of text to be prepended to the message
+   * that contains the senders contact information.
+   */
+  protected function getSenderIdentificationBlock($contactId) {
+    // Other classes may want to override to add additional info.
+    // The base class only adds the Name and Email.
+    $contact = \Civi\Api4\Email::get()
+      ->setCheckPermissions(FALSE)
+      ->addSelect('contact_id.display_name')
+      ->addSelect('email')
+      ->addWhere('contact_id', '=', $contactId)
+      ->execute()->first();
+
+    return $contact['contact_id.display_name'] . "\n" .
+      $contact['email'];
+  }
+  /**
    * Send email
    *
    * Send email to everyone specified in the To and Bcc fields.
@@ -291,7 +311,10 @@ class CRM_Petitionemail_Interface {
     foreach ($toEmails as $toDetail) {
       $mailParams['toName'] = $toDetail['name'];
       $mailParams['toEmail'] = $toDetail['email'];
-      $mailParams['text'] = $toDetail['greeting'] . "\n" . $message;
+      $mailParams['text'] = 
+        $this->getSenderIdentificationBlock($form->_contactId) . "\n\n" .
+        $toDetail['greeting'] . "\n\n" . 
+        $message;
       if (!CRM_Utils_Mail::send($mailParams)) {
         $errorMessage = E::ts('Error sending message to %1', [1 => $mailParams['toEmail']]);
         CRM_Core_Session::setStatus($errorMessage);
