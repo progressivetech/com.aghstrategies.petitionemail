@@ -148,7 +148,7 @@ return [
         'time_format' => NULL,
         'note_columns' => 60,
         'note_rows' => 4,
-        'serialize' => 1,
+        'serialize' => 0,
         'filter' => NULL,
         'in_selector' => FALSE,
         'option_group_id' => NULL,
