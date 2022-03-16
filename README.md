@@ -83,6 +83,10 @@ extension, some of which require manual intervention.
    representing the email is added with both the signer and the target so you
    have a complete record of which target was sent which email.
 
+ * A sender identification block and a salutation is prepended to each email
+   sent to correctly identify the sender and the recipient. Default email
+   messages should no longer contain a salutation.
+
  * The from address is configurable and never uses the signer's from address.
    But the signer's from address is set in the Reply-To header.
 
