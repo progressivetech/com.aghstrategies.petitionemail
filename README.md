@@ -19,7 +19,7 @@ that have an email address.
 When creating or editing a petition, you can expand a section at the bottom of
 the petition form and choose from a list of "Email Recipient Systems".
 
-This extension provides the "Static" system. The StateLegEmail extension, if
+This extension provides the "Static" system. The [StateLegEmail extension](https://github.com/progressivetech/com.aghstrategies.statelegemail), if
 installed, will provide State Legislators, State Upper and State Lower
 (dynamically loading them via the Open States API).
 
@@ -55,13 +55,13 @@ extension, some of which require manual intervention.
  * Both Subject and Message fields for signers are automatically provided and
    no longer need to be configured. This means, for most petitions, there is no
    longer a need for an activity profile to be specified **and if one is
-   specified and it includes a custom message field, there will be two cusotm
+   specified and it includes a custom message field, there will be two custom
    message fields on the peition.**
 
    To work around this problem, an Api is provided that automatically removes the
    activity profile from all petitions using this extension. You can run it with:
 
-      cv --user=admin api4 PetitionEmailUtilities.RemoveActivityProfiles
+   `cv --user=admin api4 PetitionEmailUtilities.RemoveActivityProfiles`
 
    Or, via the web based Api4 page (/civicrm/api4).
 
@@ -73,7 +73,7 @@ extension, some of which require manual intervention.
 
    You can automate this process via the API;
 
-   cv --user=admin api4 PetitionEmailUtilities.FixTargets
+   `cv --user=admin api4 PetitionEmailUtilities.FixTargets`
 
    Or, via the web based Api4 page (/civicrm/api4).
 
