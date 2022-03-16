@@ -278,6 +278,7 @@ class CRM_Petitionemail_Interface {
     return $contact['contact_id.display_name'] . "\n" .
       $contact['email'];
   }
+  
   /**
    * Send email
    *
@@ -300,14 +301,25 @@ class CRM_Petitionemail_Interface {
     ];
 
     $toEmails = $this->getContactDetails($targets);
-    $bccEmails = $this->getContactDetails($this->getPetitionValue('BCC'));
-    if (!empty($bccEmails)) {
-      $bccHeader = [];
-      foreach($bccEmails as $bcc) {
-        $bccHeader[] = CRM_Utils_Mail::formatRFC822Email($bcc['name'], $bcc['email']);
+    $bcc = $this->getPetitionValue('BCC');
+    if ($bcc) {
+      $bccEmails = $this->getContactDetails($bcc);
+      if ($bccEmails) {
+        $bccHeader = [];
+        foreach($bccEmails as $bcc) {
+          $bccHeader[] = CRM_Utils_Mail::formatRFC822Email($bcc['name'], $bcc['email']);
+        }
+        $mailParams['headers']['bcc'] = implode(',', $bccHeader);
       }
-      $mailParams['headers']['bcc'] = implode(',', $bccHeader);
     }
+
+    // Set the sender email as the reply to address.
+    $mailParams['headers']['reply-to'] = \Civi\Api4\Email::get()
+      ->setCheckPermissions(FALSE)
+      ->addSelect('email')
+      ->addSelect('is_primary', '=', TRUE)
+      ->addWhere('contact_id', '=', $form->_contactId)
+      ->execute()->first()['email'];
 
     // If we have multiple "To" addresses we send the mail multiple times
     foreach ($toEmails as $toDetail) {
