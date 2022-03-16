@@ -1,13 +1,93 @@
 # Petition Email
 
-This extension allows the easy setup of automatic emails to a decision-maker upon signing a CiviCRM petition.
+**NOTE**: This extension has been signficantly re-written from the original.
 
-It uses the CiviCRM outbound email system, which makes it configurable, but for obvious reasons, deliverability is not guaranteed.  Likewise, this is for sending all messages for a given petition to the same email address.  This isn't going to find your member of Congress or anything.
+If you are upgrading, please see the upgrade notes below. Manual intervention
+will be necessary.
+
+## About
+
+This extension allows the easy setup of automatic emails to decision-makers
+upon signing a CiviCRM petition.
+
+It uses the CiviCRM outbound email system, which makes it configurable, but for
+obvious reasons, deliverability is not guaranteed and it only works for targets
+that have an email address.
 
 ## Usage
 
-When creating or editing a petition, you can check a box to choose to have it deliver emails.
-When you do so, you'll need to set the recipient's name and email, the custom field that will have the user's message,
-the default message, and the message subject.  You will need to create the custom field first - it must be a Note/Textarea field that's in a custom data set that applies to activities (optionally limited to petition activities).  When you create the field, you should then add it to a profile that you will want to set as the activity profile on the petition.
+When creating or editing a petition, you can expand a section at the bottom of
+the petition form and choose from a list of "Email Recipient Systems".
 
-When someone fills out the petition, they'll see the text box populated with your default message.  If they don't touch it or if they delete it entirely, the default message will be sent.  Otherwise, the message they type will be sent.  It will appear to come from the signer's name and email address, but you will have to be sure to include name and email fields in your contact profile on the petition.
+This extension provides the "Static" system. The StateLegEmail extension, if
+installed, will provide State Legislators, State Upper and State Lower
+(dynamically loading them via the Open States API).
+
+Next, you can fill out the particulars for your campaign, including the default
+email subject and message, as well as one or more "To" fields indicating the
+contact or contacts that should receive the email.
+
+Each target must be a contact in your database (you can configure the target
+with DO NOT EMAIL to avoid accidentally sending them your organizational email
+messages while still enabling them to receive petition email messages). You can
+also choose yourself as a BCC to receive an email everytime someone fills out
+your petition.
+
+When someone fills out the petition, they'll see a text box populated with your
+default message and default subject.  If they don't touch it or if they delete
+it entirely, the defaults will be sent.  Otherwise, the message they type will
+be sent.  
+
+The email will be sent with the signer's name in the email messages from field,
+but your organizational address (sending from the signer's email address will
+guarantee that the message goes straight to the spam box).
+
+The signer's name and email will appear in the body of the message and the
+signer's email address will be set in the Reply-To header so if the target hits
+reply, it will go to the signer.
+
+
+## Upgrade
+
+There are number of signficant changes from the original version of this
+extension, some of which require manual intervention.
+
+ * Both Subject and Message fields for signers are automatically provided and
+   no longer need to be configured. This means, for most petitions, there is no
+   longer a need for an activity profile to be specified **and if one is
+   specified and it includes a custom message field, there will be two cusotm
+   message fields on the peition.**
+
+   To work around this problem, an Api is provided that automatically removes the
+   activity profile from all petitions using this extension. You can run it with:
+
+      cv --user=admin api4 PetitionEmailUtilities.RemoveActivityProfiles
+
+   Or, via the web based Api4 page (/civicrm/api4).
+
+   Or you can simply update your petitions by hand.
+
+ * The Recipient name and email fields have been removed. **You must manually
+   add these targets to your database and select them using the new contact
+   reference fields.**
+
+   You can automate this process via the API;
+
+   cv --user=admin api4 PetitionEmailUtilities.FixTargets
+
+   Or, via the web based Api4 page (/civicrm/api4).
+
+   Or you can simply update your petitions by hand.
+
+ * When ever a petition is signed and an email is sent, an activity
+   representing the email is added with both the signer and the target so you
+   have a complete record of which target was sent which email.
+
+ * The from address is configurable and never uses the signer's from address.
+   But the signer's from address is set in the Reply-To header.
+
+ * A BCC option is available to get a copy of all email sent.
+
+ * The code has been refactored to make it easier to maintain (using managed
+   entities) and easier to add new recipient systems.
+
