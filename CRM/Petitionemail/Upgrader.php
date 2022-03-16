@@ -8,5 +8,29 @@ use Civi\Api4\UFField;
  */
 class CRM_Petitionemail_Upgrader extends CRM_Petitionemail_Upgrader_Base {
 
-  
+  function upgrade_2000 () {
+    // Disable no longer used fields.
+    $fields = [
+      'Recipient_Name',
+      'Recipient_Email',
+      'CC',
+      'CC_Email',
+      'Message_Field'
+    ];
+
+    foreach($fields as $field) {
+      $id = \Civi\Api4\CustomField::get()
+        ->addSelect('id')
+        ->addWhere('custom_group_id:name', '=', 'Letter_To')
+        ->addWhere('name', '=', $field)
+        ->execute()->first()['id'];
+      if ($id) {
+        \Civi\Api4\CustomField::update()
+          ->addWhere('id', '=', $id)
+          ->addValue('is_active', FALSE)
+          ->execute();
+      }
+    }
+    return TRUE;
+  }
 }
