@@ -245,6 +245,7 @@ class CRM_Petitionemail_Interface {
       ->addValue('last_name', $last_name)
       ->addValue('middle_name', $middle_name)
       ->addValue('contact_type', 'Individual')
+      ->addValue('do_not_email', TRUE)
       ->addChain('create_email', \Civi\Api4\Email::create()->setValues(['contact_id' => '$id', 'email' => $email]));
 
     // Check if title exists in prefix list.
