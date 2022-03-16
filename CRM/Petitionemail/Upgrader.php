@@ -9,7 +9,8 @@ use Civi\Api4\UFField;
 class CRM_Petitionemail_Upgrader extends CRM_Petitionemail_Upgrader_Base {
 
   function upgrade_2000 () {
-    // Disable no longer used fields.
+    // Disable no longer used fields. These should get yanked by the
+    // managed code, but just in case we disable them here.
     $fields = [
       'Recipient_Name',
       'Recipient_Email',
