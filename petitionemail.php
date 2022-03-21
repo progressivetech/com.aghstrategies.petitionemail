@@ -94,52 +94,6 @@ function petitionemail_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
  */
 function petitionemail_civicrm_managed(&$entities) {
   _petitionemail_civix_civicrm_managed($entities);
-
-  // We can't set our custom activity fields to extend activities
-  // of the type Petition because it has to be hard coded as an
-  // ID, so we intercept and update it.
-  foreach($entities as $index => $entity) {
-    if ($entity['name'] = 'CustomGroup_Petition_Activity_Fields') {
-      $petitionActivityTypeId = \Civi\Api4\OptionValue::get()
-        ->addWhere('option_group_id:name', '=', 'activity_type')
-        ->addWhere('name', '=', 'Petition')
-        ->addSelect('id')
-        ->execute()->first()['id'];
-      if ($petitionActivityTypeId) {
-        $entities[$index]['parmams'][0]['values'][0]['extends_entity_column_value'] = [ $petitionActivityTypeId ];
-      }
-    }
-  }
-
-
-  // And, Apiv4 UFField requires field_name which has to be set to custom_nnn
-  // where nnn is the custom field id. So, we do a bit of a massage here
-  // and we either:
-  // 1. Yank the UFField out of the managed entities if the custom field has not
-  // yet been created or...
-  // 2. Set field_name to the appropriate value if it has been created.
-  $massagedEntities = [
-    'UFGroup_Petition_Activity_Fields_UFField_Message',
-    'UFGroup_Petition_Activity_Fields_UFField_Subject'
-  ];
-  foreach($entities as $index => $entity) {
-    if (in_array($entity['name'], $massagedEntities)) {
-      $fieldName = $entity['parmams'][0]['values'][0]['field_name:name'];
-      $id = \Civi\Api4\CustomField::get()
-        ->addWhere('name', '=', $fieldName)
-        ->addSelect('id')
-        ->execute()->first()['id'];
-      if ($id) {
-        $entity['parmams'][0]['values'][0]['field_name'] = 'custom_' . $id;
-      }
-      else {
-        unset($entities[$index]);
-      }
-    }
-  }
-
-
-  
 }
 
 /**
@@ -209,49 +163,3 @@ function petitionemail_civicrm_postProcess($formName, &$form) {
       break;
   }
 }
-
-function petitionemail_civicrm_customPre(string $op, int $groupID, int $entityID, array &$params) {
-  $customGroup = \Civi\Api4\CustomGroup::get(FALSE)
-    ->addWhere('id', '=', $groupID)
-    ->execute()
-    ->first();
-  if ($customGroup['name'] !== 'Letter_To') {
-    return;
-  }
-
-  // We hide the actual To,CC,BCC fields and replace them with EntityReference fields.
-  // Here we save the values of the EntityReference fields (Email IDs) to the actual custom fields.
-  $customFields = \Civi\Api4\CustomField::get(FALSE)
-    ->addWhere('custom_group_id:name', '=', 'Letter_To')
-    ->execute()
-    ->indexBy('id');
-
-  $toEmailID = CRM_Utils_Request::retrieveValue('to_email_id', 'CommaSeparatedIntegers', NULL, FALSE, 'POST');
-  $ccEmailID = CRM_Utils_Request::retrieveValue('cc_email_id', 'CommaSeparatedIntegers', NULL, FALSE, 'POST');
-  $bccEmailID = CRM_Utils_Request::retrieveValue('bcc_email_id', 'CommaSeparatedIntegers', NULL, FALSE, 'POST');
-  foreach ($params as &$customFieldParams) {
-    if (isset($customFields[$customFieldParams['custom_field_id']])) {
-      $customField = $customFields[$customFieldParams['custom_field_id']];
-      switch ($customField['name']) {
-        case 'To':
-          if (!empty($toEmailID)) {
-            $customFieldParams['value'] = $toEmailID;
-          }
-          break;
-
-        case 'CC':
-          if (!empty($ccEmailID)) {
-            $customFieldParams['value'] = $ccEmailID;
-          }
-          break;
-
-        case 'BCC':
-          if (!empty($bccEmailID)) {
-            $customFieldParams['value'] = $bccEmailID;
-          }
-          break;
-      }
-    }
-  }
-}
-
