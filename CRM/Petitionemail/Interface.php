@@ -12,13 +12,6 @@ use CRM_Petitionemail_ExtensionUtil as E;
 class CRM_Petitionemail_Interface {
 
   /**
-   * Value of the record_type_id for activity source contacts.
-   *
-   * @type int
-   */
-  protected $sourceRecordType = NULL;
-
-  /**
    * Fields in extension's custom data set.
    *
    * @type array
@@ -180,22 +173,22 @@ class CRM_Petitionemail_Interface {
    */
   public function processSignature($form) {}
 
-  /**
+  /** 
    * Create activity
    *
-   * This creates an initial, incomplete activity that can be completed
-   * with a call to $this->activity->completeActivity() once all emails are successfully
-   * sent.
+   * This creates an initial, incomplete activity that can be completed with a
+   * call to $this->activity->completeActivity() once all emails are
+   * successfully sent.
    *
-   * @param $extraContactIds - add any extra contactIDs that should be
-   * "with"ed on the activity.
+   * @param $extraContactIds - add any extra contactIDs that should be "with"ed
+   * on the activity.
    *
    * Generate an activity linking the signer to anyone who got the message.
    */
   protected function createPendingActivity($form, $extraContactIds = []) {
     $message = $this->getSenderIdentificationBlock($form) . "\n\n" .
-      $this->getSubmittedValue($form, 'signer_message');
-    $subject = $this->getSubmittedValue($form, 'signer_subject');
+      $this->getSubmittedValue($form, 'signer_message'); $subject =
+      $this->getSubmittedValue($form, 'signer_subject');
 
     // Append the Petition name so email can easily be matched to Petition
     $activitySubject = $subject;

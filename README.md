@@ -19,8 +19,9 @@ that have an email address.
 When creating or editing a petition, you can expand a section at the bottom of
 the petition form and choose from a list of "Email Recipient Systems".
 
-This extension provides the "Static" system. The [StateLegEmail extension](https://github.com/progressivetech/com.aghstrategies.statelegemail), if
-installed, will provide State Legislators, State Upper and State Lower
+This extension provides the "Static" system. The [StateLegEmail
+extension](https://github.com/progressivetech/com.aghstrategies.statelegemail),
+if installed, will provide State Legislators, State Upper and State Lower
 (dynamically loading them via the Open States API).
 
 Next, you can fill out the particulars for your campaign, including the default
@@ -34,8 +35,8 @@ also choose yourself as a BCC to receive an email everytime someone fills out
 your petition.
 
 When someone fills out the petition, they'll see a text box populated with your
-default message and default subject.  If they don't touch it or if they delete
-it entirely, the defaults will be sent.  Otherwise, the message they type will
+default message and default subject. If they don't touch it or if they delete
+it entirely, the defaults will be sent. Otherwise, the message they type will
 be sent.  
 
 The email will be sent with the signer's name in the email messages from field,
@@ -45,7 +46,6 @@ guarantee that the message goes straight to the spam box).
 The signer's name and email will appear in the body of the message and the
 signer's email address will be set in the Reply-To header so if the target hits
 reply, it will go to the signer.
-
 
 ## Upgrade
 
@@ -87,8 +87,10 @@ extension, some of which require manual intervention.
    sent to correctly identify the sender and the recipient. Default email
    messages should no longer contain a salutation.
 
- * The from address is configurable and never uses the signer's from address.
-   But the signer's from address is set in the Reply-To header.
+ * To avoid fraud detection, the from email address used to send all email is
+   configurable and never uses the signer's from address. But the signer's from
+   address is set in the Reply-To header and included in the body of the
+   message.
 
  * A BCC option is available to get a copy of all email sent.
 
