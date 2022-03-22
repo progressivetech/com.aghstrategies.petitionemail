@@ -26,13 +26,6 @@ class CRM_Petitionemail_Interface {
   protected $petitionFields = [];
 
   /**
-   * The default "from" address for the site.
-   *
-   * @type string
-   */
-  protected $defaultFromAddress = NULL;
-
-  /**
    * The values for the given survey.
    *
    * @type array
@@ -381,47 +374,6 @@ class CRM_Petitionemail_Interface {
   }
 
   /**
-   * Get the value for the record_type_id for an activity source.
-   *
-   * @return int
-   *   The source activityContact record ID.
-   */
-  public function getSourceRecordType() {
-    if (empty($this->sourceRecordType)) {
-      $cache = CRM_Utils_Cache::singleton();
-      $this->sourceRecordType = $cache->get('petitionemail_sourceRecordType');
-    }
-    if (empty($this->sourceRecordType)) {
-      try {
-        $sourceTypeParams = [
-          'name' => "activity_contacts",
-          'options' => ['limit' => 1],
-          'api.OptionValue.getsingle' => [
-            'option_group_id' => '$value.id',
-            'name' => "Activity Source",
-            'options' => ['limit' => 1],
-          ],
-        ];
-        $sourceTypeInfo = civicrm_api3('OptionGroup', 'getsingle', $sourceTypeParams);
-
-        if (empty($sourceTypeInfo['api.OptionValue.getsingle']['value'])) {
-          $this->sourceRecordType = 2;
-        }
-        else {
-          $this->sourceRecordType = $sourceTypeInfo['api.OptionValue.getsingle']['value'];
-          $cache->set('petitionemail_sourceRecordType', $this->sourceRecordType);
-        }
-      }
-      catch (CiviCRM_API3_Exception $e) {
-        $error = $e->getMessage();
-        CRM_Core_Error::debug_log_message(E::ts('API Error: %1', [1 => $error]));
-      }
-    }
-
-    return $this->sourceRecordType;
-  }
-
-  /**
    * Find the site's default "from" address.
    *
    * @return string
@@ -476,31 +428,6 @@ class CRM_Petitionemail_Interface {
     }
 
     return FALSE;
-  }
-
-  /**
-   * Find the field containing the petition message.
-   *
-   * @deprecated
-   *
-   * @return string
-   *   The field name (e.g. "custom_4") or FALSE if none found.
-   */
-  public function findMessageField() {
-    $messageUfField = CRM_Utils_Array::value($this->fields['Message_Field'], $this->petitionEmailVal);
-    // We know $messageUfField is filled because this isn't marked incomplete.
-    // Now find the field name from the UFField id.
-    try {
-      return civicrm_api3('UFField', 'getvalue', [
-        'return' => "field_name",
-        'id' => $messageUfField,
-      ]);
-    }
-    catch (CiviCRM_API3_Exception $e) {
-      $error = $e->getMessage();
-      CRM_Core_Error::debug_log_message(E::ts('API Error: %1', [1 => $error]));
-      return FALSE;
-    }
   }
 
   /**
