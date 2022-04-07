@@ -35,4 +35,29 @@ class CRM_Petitionemail_Upgrader extends CRM_Petitionemail_Upgrader_Base {
     }
     return TRUE;
   }
+
+  public function upgrade_2001() {
+    $this->addMessageTemplate();
+    return TRUE;
+  }
+
+  private function addMessageTemplate() {
+    // Create msg template
+    if (empty(\Civi\Api4\MessageTemplate::get(FALSE)
+      ->addWhere('msg_title', '=', 'Sample Petition Email')
+      ->execute()
+      ->count())
+    ) {
+      \Civi\Api4\MessageTemplate::create(FALSE)
+        ->addValue('msg_title', 'Sample Petition Email')
+        ->addValue('msg_subject', '{petitionemail.subject}')
+        ->addValue('msg_html', "{petitionemail.senderIdentificationBlock}
+
+{contact.email_greeting_display}
+
+{petitionemail.message}")
+        ->execute();
+    }
+  }
+
 }

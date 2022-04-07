@@ -298,22 +298,39 @@ class CRM_Petitionemail_Interface {
     }
 
     // Set the sender email as the reply to address.
-    $mailParams['headers']['reply-to'] = \Civi\Api4\Email::get()
-      ->setCheckPermissions(FALSE)
+    $mailParams['headers']['reply-to'] = \Civi\Api4\Email::get(FALSE)
       ->addSelect('email')
       ->addSelect('is_primary', '=', TRUE)
       ->addWhere('contact_id', '=', $form->_contactId)
       ->execute()->first()['email'];
 
     // If we have multiple "To" addresses we send the mail multiple times
-    foreach ($toEmails as $toDetail) {
+    foreach ($toEmails as $toContactID => $toDetail) {
       $mailParams['toName'] = $toDetail['name'];
       $mailParams['toEmail'] = $toDetail['email'];
-      $mailParams['text'] = 
-        $this->getSenderIdentificationBlock($form) . "\n\n" .
-        $toDetail['greeting'] . "\n\n" . 
-        $message;
-      if (!CRM_Utils_Mail::send($mailParams)) {
+
+      \Civi::$statics['petitionemail']['tokens'] = [
+        'senderIdentificationBlock' => $this->getSenderIdentificationBlock($form),
+        'message' => $message,
+        'subject' => $subject,
+      ];
+
+      if (!empty($this->getPetitionValue('Letter_To.MessageTemplate'))) {
+        $mailParams['messageTemplateID'] = $this->getPetitionValue('Letter_To.MessageTemplate');
+        $mailParams['contactId'] = $toContactID;
+        $mailParams['workflow'] = 'petitionemail_send';
+        $mailParams['messageTemplate']['subject'] = $subject;
+        [$sent, $_, $_, $_] = CRM_Core_BAO_MessageTemplate::sendTemplate($mailParams);
+      }
+      else {
+        $mailParams['text'] =
+          \Civi::$statics['petitionemail']['tokens']['senderIdentificationBlock'] . "\n\n" .
+          $toDetail['greeting'] . "\n\n" .
+          $message;
+
+        $sent = CRM_Utils_Mail::send($mailParams);
+      }
+      if (!$sent) {
         $errorMessage = E::ts('Error sending message to %1', [1 => $mailParams['toEmail']]);
         CRM_Core_Session::setStatus($errorMessage);
         \Civi::log()->error(E::SHORT_NAME . ': ' . $errorMessage);

@@ -12,6 +12,16 @@ function petitionemail_civicrm_config(&$config) {
   _petitionemail_civix_civicrm_config($config);
 }
 
+function petitionemail_civicrm_container($container) {
+  $container->addResource(new \Symfony\Component\Config\Resource\FileResource(__FILE__));
+  $container->findDefinition('dispatcher')->addMethodCall('addListener',
+    ['civi.token.list', ['\Civi\Petitionemail\Tokens', 'register']]
+  );
+  $container->findDefinition('dispatcher')->addMethodCall('addListener',
+    ['civi.token.eval', ['\Civi\Petitionemail\Tokens', 'evaluate']]
+  );
+}
+
 /**
  * Implements hook_civicrm_xmlMenu().
  *
@@ -161,5 +171,32 @@ function petitionemail_civicrm_postProcess($formName, &$form) {
       $interface = new $class($form->petition['id']);
       $interface->processSignature($form);
       break;
+  }
+}
+
+/**
+ * Implements hook_civicrm_fieldOptions().
+ *
+ * Add all the groups listed in allowedgroups_for_eventdedupe to the duplicate_if_in_groups custom field
+ * which is used to select a group that is used in hook_civicrm_findDuplicates to choose whether to duplicate
+ * or merge contact on event registration.
+ */
+function petitionemail_civicrm_fieldOptions($entity, $field, &$options, $params) {
+  if ($entity == 'Survey' && ($field == 'custom_427')) {
+
+    // Add a filtered select list to replace the standard select template field
+    $messageTemplates = \Civi\Api4\MessageTemplate::get(FALSE)
+      ->addWhere('workflow_name', 'IS NULL')
+      ->addWhere('is_sms', '=', FALSE)
+      ->addWhere('is_active', '=', TRUE)
+      ->addOrderBy('msg_title', 'ASC');
+
+    $templates = $messageTemplates->execute()->indexBy('id');
+    $listOfTemplates = [];
+    foreach ($templates as $templateID => $templateDetail) {
+      $listOfTemplates[$templateID] = $templateDetail['msg_title'];
+    }
+
+    $options = $listOfTemplates;
   }
 }
