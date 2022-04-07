@@ -1,5 +1,5 @@
 Package: com.aghstrategies.petitionemail
-Copyright (C) 2021, AGH Strategies, LLC <info@aghstrategies.com>
+Copyright (C) 2022, AGH Strategies, LLC <info@aghstrategies.com>
 Licensed under the GNU Affero Public License 3.0 (below).
 
 -------------------------------------------------------------------------------
