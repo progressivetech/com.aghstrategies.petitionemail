@@ -2,6 +2,7 @@
 
 use Civi\Api4\CustomField;
 use Civi\Api4\UFField;
+use CRM_Petitionemail_ExtensionUtil as E;
 
 /**
  * Collection of upgrade steps.
