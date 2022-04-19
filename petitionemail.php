@@ -182,7 +182,19 @@ function petitionemail_civicrm_postProcess($formName, &$form) {
  * or merge contact on event registration.
  */
 function petitionemail_civicrm_fieldOptions($entity, $field, &$options, $params) {
-  if ($entity == 'Survey' && ($field == 'custom_427')) {
+  if ($entity == 'Survey') {
+
+    // Check if this is the customField that specifies the Message Template ID
+    $customFieldID = \Civi\Api4\CustomField::get(FALSE)
+      ->addSelect('id')
+      ->addWhere('custom_group_id:name', '=', 'Letter_To')
+      ->addWhere('name', '=', 'MessageTemplate')
+      ->execute()
+      ->first()['id'] ?? NULL;
+    if (empty($customFieldID) || ($field !== "custom_{$customFieldID}")) {
+      // Not the MessageTemplate field (or field does not exist)
+      return;
+    }
 
     // Add a filtered select list to replace the standard select template field
     $messageTemplates = \Civi\Api4\MessageTemplate::get(FALSE)
