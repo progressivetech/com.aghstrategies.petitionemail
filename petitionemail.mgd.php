@@ -334,7 +334,7 @@ return [
         'is_search_range' => FALSE,
         'weight' => 10,
         'help_pre' => NULL,
-        'help_post' => 'Select a Message Template to use for the petition email',
+        'help_post' => 'Optionally, select a Message Template to use for the petition email to improve the look and feel of the messages sent.',
         'mask' => NULL,
         'attributes' => NULL,
         'javascript' => NULL,
@@ -668,5 +668,22 @@ return [
       ],
     ],
   ],
+  [
+    'name' => 'MessageTemplate_SamplePetitionEmail',
+    'entity' => 'MessageTemplate',
+    'cleanup' => 'unused',
+    'params' => [
+      'version' => 4,
+      'match' => ['msg_title'],
+      'values' => [
+        'msg_title' => 'Samle Petition Email',
+        'msg_subject' => '{petitionemail.subject}',
+        'msg_html' => "<p>{petitionemail.senderIdentificationBlock}</p>
 
+<p>{contact.email_greeting_display}</p>
+
+<p>{petitionemail.message}</p>",
+      ],
+    ],
+  ],
 ];
