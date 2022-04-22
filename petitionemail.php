@@ -201,6 +201,7 @@ function petitionemail_civicrm_fieldOptions($entity, $field, &$options, $params)
       ->addWhere('workflow_name', 'IS NULL')
       ->addWhere('is_sms', '=', FALSE)
       ->addWhere('is_active', '=', TRUE)
+      ->addWhere('msg_html', 'LIKE', '%{petitionemail.message}%')
       ->addOrderBy('msg_title', 'ASC');
 
     $templates = $messageTemplates->execute()->indexBy('id');
