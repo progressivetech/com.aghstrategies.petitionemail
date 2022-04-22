@@ -101,7 +101,7 @@ class CRM_Petitionemail_Interface {
   }
 
   /**
-   * Get the value of a given petition field. 
+   * Get the value of a given petition field.
    *
    * Retrieve the value for a given petition field.
    *
@@ -116,7 +116,7 @@ class CRM_Petitionemail_Interface {
   }
 
   /**
-   * Get the value of a submitted petition field. 
+   * Get the value of a submitted petition field.
    *
    * Given a form and a field, return the value of the field
    * for the given form.
@@ -129,9 +129,9 @@ class CRM_Petitionemail_Interface {
         return $this->getPetitionValue('Default_Message');
       }
       elseif ($field == 'signer_subject') {
-        return $this->getPetitionValue('Default_Subject');
+        return $this->getPetitionValue('Subject');
       }
-      return ''; 
+      return '';
     }
     return $form->_submitValues[$field];
   }
@@ -173,7 +173,7 @@ class CRM_Petitionemail_Interface {
    */
   public function processSignature($form) {}
 
-  /** 
+  /**
    * Create activity
    *
    * This creates an initial, incomplete activity that can be completed with a
@@ -203,7 +203,7 @@ class CRM_Petitionemail_Interface {
     ];
     $this->activity = new CRM_Petitionemail_Activity();
     $this->activity->createActivity($activityParams);
-  } 
+  }
 
   /**
    * Retrieve or add contact
@@ -212,8 +212,7 @@ class CRM_Petitionemail_Interface {
    * add the contact and return the contact id.
    */
   protected function addOrRetrieveContact($email, $first_name, $last_name, $middle_name = NULL, $title = NULL) {
-    $record = \Civi\Api4\Email::get()
-      ->setCheckPermissions(FALSE)
+    $record = \Civi\Api4\Email::get(FALSE)
       ->addSelect('contact_id')
       ->addWhere('contact_id.first_name', '=', $first_name)
       ->addWhere('contact_id.last_name', '=', $last_name)
@@ -224,9 +223,8 @@ class CRM_Petitionemail_Interface {
     if (!empty($record['contact_id'])) {
       return $record['contact_id'];
     }
-    
-    $contact = \Civi\Api4\Contact::create()
-      ->setCheckPermissions(FALSE)
+
+    $contact = \Civi\Api4\Contact::create(FALSE)
       ->addValue('first_name', $first_name)
       ->addValue('last_name', $last_name)
       ->addValue('middle_name', $middle_name)
@@ -254,8 +252,7 @@ class CRM_Petitionemail_Interface {
     $contactId = $form->_contactId;
     // Other classes may want to override to add additional info.
     // The base class only adds the Name and Email.
-    $contact = \Civi\Api4\Email::get()
-      ->setCheckPermissions(FALSE)
+    $contact = \Civi\Api4\Email::get(FALSE)
       ->addSelect('contact_id.display_name')
       ->addSelect('email')
       ->addSelect('is_primary', '=', TRUE)
@@ -265,7 +262,7 @@ class CRM_Petitionemail_Interface {
     return $contact['contact_id.display_name'] . "\n" .
       $contact['email'];
   }
-  
+
   /**
    * Send email
    *
@@ -301,22 +298,39 @@ class CRM_Petitionemail_Interface {
     }
 
     // Set the sender email as the reply to address.
-    $mailParams['headers']['reply-to'] = \Civi\Api4\Email::get()
-      ->setCheckPermissions(FALSE)
+    $mailParams['headers']['reply-to'] = \Civi\Api4\Email::get(FALSE)
       ->addSelect('email')
       ->addSelect('is_primary', '=', TRUE)
       ->addWhere('contact_id', '=', $form->_contactId)
       ->execute()->first()['email'];
 
     // If we have multiple "To" addresses we send the mail multiple times
-    foreach ($toEmails as $toDetail) {
+    foreach ($toEmails as $toContactID => $toDetail) {
       $mailParams['toName'] = $toDetail['name'];
       $mailParams['toEmail'] = $toDetail['email'];
-      $mailParams['text'] = 
-        $this->getSenderIdentificationBlock($form) . "\n\n" .
-        $toDetail['greeting'] . "\n\n" . 
-        $message;
-      if (!CRM_Utils_Mail::send($mailParams)) {
+
+      \Civi::$statics['petitionemail']['tokens'] = [
+        'senderIdentificationBlock' => $this->getSenderIdentificationBlock($form),
+        'message' => $message,
+        'subject' => $subject,
+      ];
+
+      if (!empty($this->getPetitionValue('Letter_To.MessageTemplate'))) {
+        $mailParams['messageTemplateID'] = $this->getPetitionValue('Letter_To.MessageTemplate');
+        $mailParams['contactId'] = $toContactID;
+        $mailParams['workflow'] = 'petitionemail_send';
+        $mailParams['messageTemplate']['subject'] = $subject;
+        [$sent, $_, $_, $_] = CRM_Core_BAO_MessageTemplate::sendTemplate($mailParams);
+      }
+      else {
+        $mailParams['text'] =
+          \Civi::$statics['petitionemail']['tokens']['senderIdentificationBlock'] . "\n\n" .
+          $toDetail['greeting'] . "\n\n" .
+          $message;
+
+        $sent = CRM_Utils_Mail::send($mailParams);
+      }
+      if (!$sent) {
         $errorMessage = E::ts('Error sending message to %1', [1 => $mailParams['toEmail']]);
         CRM_Core_Session::setStatus($errorMessage);
         \Civi::log()->error(E::SHORT_NAME . ': ' . $errorMessage);
@@ -325,6 +339,7 @@ class CRM_Petitionemail_Interface {
       else {
         CRM_Core_Session::setStatus(E::ts('Message sent successfully to %1', [1 => $mailParams['toName']]));
       }
+
     }
     return TRUE;
   }
@@ -358,7 +373,7 @@ class CRM_Petitionemail_Interface {
         $greeting = 'Dear ' . $contact['prefix_id:name'] . ' ' . $contact['last_name'] . ',';
       }
       $details[$id] =  [
-        'name' => $contact['contact_id.display_name'], 
+        'name' => $contact['contact_id.display_name'],
         'email' => $contact['email'],
         'greeting' => $greeting,
       ];
@@ -373,10 +388,9 @@ class CRM_Petitionemail_Interface {
    *   The default "from" name and address.
    */
   public function getDefaultFromAddress() {
-    $label = \Civi\Api4\OptionValue::get()
-      ->setCheckPermissions(FALSE) 
+    $label = \Civi\Api4\OptionValue::get(FALSE)
       ->addSelect('label')
-      ->addWhere('option_group_id:name', '=', from_email_address)
+      ->addWhere('option_group_id:name', '=', 'from_email_address')
       ->addWhere('is_default', '=', TRUE)
       ->execute()->first()['label'];
 
@@ -438,8 +452,7 @@ class CRM_Petitionemail_Interface {
    */
   public function getSenderLine($contactId) {
     // Get the sender.
-    $displayName = \Civi\Api4\Contact::get()
-      ->setCheckPermissions(FALSE)
+    $displayName = \Civi\Api4\Contact::get(FALSE)
       ->addSelect('display_name')
       ->addWhere('id', '=', $contactId)
       ->execute()->first()['display_name'];
