@@ -271,10 +271,22 @@ class CRM_Petitionemail_Interface {
   protected function sendEmail($form, $extraContactIds = []) {
     $message = $this->getSubmittedValue($form, 'signer_message');
     $subject = $this->getSubmittedValue($form, 'signer_subject');
-    $targets = array_merge($this->getPetitionValue('To'), $extraContactIds);
+
+    $petitionToContacts = $this->getPetitionValue('To');
+    if (empty($petitionToContacts)) {
+      // array_merge fails if all arguments are not arrays.
+      $petitionToContacts = [];
+    }
+
+    $targets = array_merge($petitionToContacts, $extraContactIds);
 
     // If message is left empty and no default message, don't send anything.
     if (empty($message)) {
+      return;
+    }
+
+    // If no contacts, don't send anything.
+    if (empty($targets)) {
       return;
     }
 
