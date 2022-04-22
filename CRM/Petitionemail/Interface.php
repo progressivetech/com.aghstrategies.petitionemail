@@ -315,11 +315,11 @@ class CRM_Petitionemail_Interface {
         'subject' => $subject,
       ];
 
-      if (!empty($this->getPetitionValue('Letter_To.MessageTemplate'))) {
-        $mailParams['messageTemplateID'] = $this->getPetitionValue('Letter_To.MessageTemplate');
+      if (!empty($this->getPetitionValue('MessageTemplate'))) {
+        $mailParams['messageTemplateID'] = $this->getPetitionValue('MessageTemplate');
         $mailParams['contactId'] = $toContactID;
         $mailParams['workflow'] = 'petitionemail_send';
-        $mailParams['messageTemplate']['subject'] = $subject;
+        $mailParams['messageTemplate']['msg_subject'] = $subject;
         [$sent, $_, $_, $_] = CRM_Core_BAO_MessageTemplate::sendTemplate($mailParams);
       }
       else {
