@@ -193,7 +193,8 @@ class CRM_Petitionemail_Interface {
     // Append the Petition name so email can easily be matched to Petition
     $activitySubject = $subject;
 
-    $targets = array_merge($this->getPetitionValue('To'), $extraContactIds);
+    $petitionToContacts = $this->getPetitionValue('To') ?? [];
+    $targets = array_merge($petitionToContacts, $extraContactIds);
     // Create an email activity
     $activityParams = [
       'subject' => $activitySubject,
@@ -272,12 +273,7 @@ class CRM_Petitionemail_Interface {
     $message = $this->getSubmittedValue($form, 'signer_message');
     $subject = $this->getSubmittedValue($form, 'signer_subject');
 
-    $petitionToContacts = $this->getPetitionValue('To');
-    if (empty($petitionToContacts)) {
-      // array_merge fails if all arguments are not arrays.
-      $petitionToContacts = [];
-    }
-
+    $petitionToContacts = $this->getPetitionValue('To') ?? [];
     $targets = array_merge($petitionToContacts, $extraContactIds);
 
     // If message is left empty and no default message, don't send anything.
