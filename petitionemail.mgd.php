@@ -678,11 +678,14 @@ return [
       'values' => [
         'msg_title' => 'Samle Petition Email',
         'msg_subject' => '{petitionemail.subject}',
-        'msg_html' => "<p>{petitionemail.senderIdentificationBlock}</p>
+        'msg_html' => "
+<p>{capture assign=senderIdentificationBlock}{petitionemail.senderIdentificationBlock}{/capture}</p>
+<p>{capture assign=message}{petitionemail.message}{/capture}</p>
+<p>{\$senderIdentificationBlock|nl2br}</p>
 
 <p>{contact.email_greeting_display}</p>
 
-<p>{petitionemail.message}</p>",
+<p>{\$message|nl2br}</p>",
       ],
     ],
   ],
