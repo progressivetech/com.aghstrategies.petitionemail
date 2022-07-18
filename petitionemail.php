@@ -155,6 +155,9 @@ function petitionemail_civicrm_buildForm($formName, &$form) {
         $interface->buildSigForm($form);
       }
       break;
+    case 'CRM_Campaign_Form_Petition':
+      CRM_Core_Resources::singleton()->addScriptFile('com.aghstrategies.petitionemail', 'js/addressField.js');
+      break;
   }
 }
 
@@ -175,41 +178,99 @@ function petitionemail_civicrm_postProcess($formName, &$form) {
 }
 
 /**
+ *
  * Implements hook_civicrm_fieldOptions().
  *
- * Add all the groups listed in allowedgroups_for_eventdedupe to the duplicate_if_in_groups custom field
- * which is used to select a group that is used in hook_civicrm_findDuplicates to choose whether to duplicate
- * or merge contact on event registration.
+ * We alter field options in two cases:
+ *
+ * 1. We dynamically display available templates to be used for sending the
+ * target email. 
+ *
+ * 2. We dynamically display the available recipient systems depending on
+ * which extensions are installed.
+ *
  */
 function petitionemail_civicrm_fieldOptions($entity, $field, &$options, $params) {
   if ($entity == 'Survey') {
 
-    // Check if this is the customField that specifies the Message Template ID
-    $customFieldID = \Civi\Api4\CustomField::get(FALSE)
+    // Get the field ids we are looking for.
+    $messageTemplateFieldId = \Civi\Api4\CustomField::get(FALSE)
       ->addSelect('id')
       ->addWhere('custom_group_id:name', '=', 'Letter_To')
       ->addWhere('name', '=', 'MessageTemplate')
       ->execute()
       ->first()['id'] ?? NULL;
-    if (empty($customFieldID) || ($field !== "custom_{$customFieldID}")) {
-      // Not the MessageTemplate field (or field does not exist)
-      return;
+
+    $recipientSystemFieldId = \Civi\Api4\CustomField::get(FALSE)
+      ->addSelect('id')
+      ->addWhere('custom_group_id:name', '=', 'Letter_To')
+      ->addWhere('name', '=', 'Recipient_System')
+      ->execute()
+      ->first()['id'] ?? NULL;
+
+    // Check if this is the customField that specifies the Message Template ID
+    if ($field == "custom_{$messageTemplateFieldId}") {
+      // Add a filtered select list to replace the standard select template field
+      $messageTemplates = \Civi\Api4\MessageTemplate::get(FALSE)
+        ->addWhere('workflow_name', 'IS NULL')
+        ->addWhere('is_sms', '=', FALSE)
+        ->addWhere('is_active', '=', TRUE)
+        ->addWhere('msg_html', 'LIKE', '%{petitionemail.message}%')
+        ->addOrderBy('msg_title', 'ASC');
+
+      $templates = $messageTemplates->execute()->indexBy('id');
+      $listOfTemplates = [];
+      foreach ($templates as $templateID => $templateDetail) {
+        $listOfTemplates[$templateID] = $templateDetail['msg_title'];
+      }
+
+      $options = $listOfTemplates;
     }
 
-    // Add a filtered select list to replace the standard select template field
-    $messageTemplates = \Civi\Api4\MessageTemplate::get(FALSE)
-      ->addWhere('workflow_name', 'IS NULL')
-      ->addWhere('is_sms', '=', FALSE)
-      ->addWhere('is_active', '=', TRUE)
-      ->addWhere('msg_html', 'LIKE', '%{petitionemail.message}%')
-      ->addOrderBy('msg_title', 'ASC');
+    // Check if this is the email recipient system field.
+    if ($field == "custom_{$recipientSystemFieldId}") {
+      // We only manipulate the options if the electoral extension is
+      // installed and is the right version.
+      
+      $electoralExt = \Civi\Api4\Extension::get()
+        ->addWhere('key', '=', 'com.jlacey.electoral')
+        ->addWhere('version', '>=', 3)
+        ->addWhere('status', '=', 'installed')
+        ->execute();
+      if ($electoralExt->count() > 0) {
+        // It is installed, let's see which backends are enabled.
+        $enabledProviders = \Civi::settings()->get('electoralApiProviders');
+        foreach ($enabledProviders as $k => $provider) {
+          $name = \Civi\Api4\OptionValue::get(FALSE)
+            ->addSelect('name')
+            ->addWhere('option_group_id:name', '=', 'electoral_api_data_providers')
+            ->addWhere('value', '=', $provider)
+            ->execute()
+            ->column('name')[0];
 
-    $templates = $messageTemplates->execute()->indexBy('id');
-    $listOfTemplates = [];
-    foreach ($templates as $templateID => $templateDetail) {
-      $listOfTemplates[$templateID] = $templateDetail['msg_title'];
+          if ($name == '\Civi\Electoral\Api\Openstates') {
+            $options['OpenstatesUpper'] = 'Open States: Upper (State)';
+            $options['OpenstatesLower'] = 'Open States: Lower (Sttae)';
+            $options['OpenstatesBoth'] = 'Open States: Upper and Lower (State)';
+            $options['OpenstatesNationalHouse'] = 'Open States: House of Reps (National)';
+          }
+          elseif ($name == '\Civi\Electoral\Api\GoogleCivicInformation') {
+            $options['GoogleUpper'] = 'Google Civic: Upper (State)';
+            $options['GoogleLower'] = 'Google Civic: Lower (Sttae)';
+            $options['GoogleBoth'] = 'Google Civic: Upper and Lower (State)';
+            $options['GoogleNationalHouse'] = 'Google Civic: House of Reps (National)';
+            $options['GoogleCity'] = 'Google Civic: City Council';
+
+          } 
+          elseif ($name == '\Civi\Electoral\Api\Cicero') {
+            $options['CiceroUpper'] = 'Cicero: Upper (State)';
+            $options['CiceroLower'] = 'Cicero: Lower (Sttae)';
+            $options['CiceroBoth'] = 'Cicero: Upper and Lower (State)';
+            $options['CiceroNationalHouse'] = 'Cicero: House of Reps (National)';
+            $options['CiceroCity'] = 'Cicero: City Council';
+          }
+        }
+      }
     }
-
-    $options = $listOfTemplates;
   }
 }
