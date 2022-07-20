@@ -33,6 +33,7 @@ class CRM_Petitionemail_Page_AJAX_Recipients extends CRM_Core_Page {
     }
 
     $className = CRM_Petitionemail_Interface::findInterface($surveyId);
+    \Civi::log()->debug("survey id is $surveyId and classname is $className");
     $class = new $className($surveyId);
     $recipients = $class->findRecipients($addressValues);
     CRM_Utils_JSON::output($recipients);

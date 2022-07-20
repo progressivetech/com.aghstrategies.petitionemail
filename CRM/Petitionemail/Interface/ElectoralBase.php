@@ -241,17 +241,26 @@ class CRM_Petitionemail_Interface_ElectoralBase extends CRM_Petitionemail_Interf
     $update = FALSE;
     $provider = new $this->electoralLookupClass($limit, $update);
     $adjustedAddress = [
-      'street_address' => $addressvalues['Street_Address_Field'],
+      'street_address' => $addressValues['Street_Address_Field'],
       'city' => $addressValues['City_Field'],
       'state_province_id' => $addressValues['State_Province_Field'],
       'postal_code' => $postalCode,
     ];
     $provider->setAddress($adjustedAddress);
     $response = $provider->lookup();
+    \Civi::log()->debug("response: ". print_r($response, TRUE));
 
     foreach ($response['official'] as $official) {
+      $email = $official->getEmailAddress();
+      if (empty($email)) {
+        continue;
+      }
+      if (!$this->includeOfficial($official)) {
+        continue;
+
+      }
       $return[] = [
-        'email' => $official->getEmailAddress(),
+        'email' => $email,
         'photourl' => $official->getImageUrl(),
         'name' => $official->getName(),
         'family_name' => $official->getFirstName(),

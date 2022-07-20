@@ -420,29 +420,15 @@ class CRM_Petitionemail_Interface {
    *   The class of the interface, or false if not found.
    */
   public static function findInterface($surveyId) {
-    try {
-      $fieldId = civicrm_api3('CustomField', 'getvalue', [
-        'return' => "id",
-        'name' => "Recipient_System",
-        'custom_group_id' => "Letter_To",
-      ]);
-      $result = civicrm_api3('Survey', 'getvalue', [
-        'return' => "custom_$fieldId",
-        'id' => $surveyId,
-      ]);
-      if (!empty($result)) {
-        $class = "CRM_Petitionemail_Interface_$result";
-        if (class_exists($class)) {
-          return $class;
-        }
-      }
+    $result = \Civi\Api4\Survey::get()
+      ->setCheckPermissions(FALSE)
+      ->addWhere('id', '=', $surveyId)
+      ->addSelect('Letter_To.Recipient_System')
+      ->execute()->first();
+    if ($result) {
+      return "CRM_Petitionemail_Interface_" . $result['Letter_To.Recipient_System'];
     }
-    catch (CiviCRM_API3_Exception $e) {
-      $error = $e->getMessage();
-      CRM_Core_Error::debug_log_message(E::ts('API Error: %1', [1 => $error]));
-    }
-
-    return FALSE;
+    return NULL;
   }
 
   /**

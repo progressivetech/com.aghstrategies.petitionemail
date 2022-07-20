@@ -1,14 +1,14 @@
 <?php
 /**
  * @file
- * Cicero class for querying the Upper state senate officials 
+ * Cicero class for querying city council 
  *
  */
 
 /**
  * @extends CRM_Petitionemail_Interface_ElectoralBase
  */
-class CRM_Petitionemail_Interface_CiceroUpper extends CRM_Petitionemail_Interface_ElectoralBase {
+class CRM_Petitionemail_Interface_CiceroCity extends CRM_Petitionemail_Interface_ElectoralBase {
 
   /**
    * The class to use for lookups
@@ -24,7 +24,7 @@ class CRM_Petitionemail_Interface_CiceroUpper extends CRM_Petitionemail_Interfac
    * out?
    */
   protected function includeOfficial($official) {
-    if ($official->getChamber() == 'upper' && $official->getLevel() == 'administrativeArea1') {
+    if ($official->getLevel() == 'locality') {
       return TRUE;
     }
     return FALSE;

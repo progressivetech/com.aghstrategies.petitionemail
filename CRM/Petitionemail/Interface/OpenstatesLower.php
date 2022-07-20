@@ -1,21 +1,21 @@
 <?php
 /**
  * @file
- * Cicero class for querying the Upper state senate officials 
+ * Open States class for querying the Lower state officials 
  *
  */
 
 /**
  * @extends CRM_Petitionemail_Interface_ElectoralBase
  */
-class CRM_Petitionemail_Interface_CiceroUpper extends CRM_Petitionemail_Interface_ElectoralBase {
+class CRM_Petitionemail_Interface_OpenstatesLower extends CRM_Petitionemail_Interface_ElectoralBase {
 
   /**
    * The class to use for lookups
    *
    * Should be overridden on the inherited class.
    */
-  protected $electoralLookupClass = '\Civi\Electoral\Api\Cicero';
+  protected $electoralLookupClass = '\Civi\Electoral\Api\Openstates';
 
   /**
    * Include official
@@ -24,7 +24,7 @@ class CRM_Petitionemail_Interface_CiceroUpper extends CRM_Petitionemail_Interfac
    * out?
    */
   protected function includeOfficial($official) {
-    if ($official->getChamber() == 'upper' && $official->getLevel() == 'administrativeArea1') {
+    if ($official->getChamber() == 'lower' && $official->getLevel() == 'administrativeArea1') {
       return TRUE;
     }
     return FALSE;
