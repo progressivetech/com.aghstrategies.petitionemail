@@ -156,16 +156,8 @@ class CRM_Petitionemail_Interface_ElectoralBase extends CRM_Petitionemail_Interf
    */
   public function buildSigForm($form) {
     $jsVars = $this->getAddressFieldsMap();
-    $jsVars['message'] = 'signer_message';
-
-    $form->addElement('text', 'selected_officials', ts('Selected Officials', array('domain' => 'com.aghstrategies.petitionemail')));
-    CRM_Core_Region::instance('form-body')->add(array(
-      'template' => 'CRM/Petitionemail/Form/SelectedOfficials.tpl',
-    ));
-
     CRM_Core_Resources::singleton()->addScriptFile('com.aghstrategies.petitionemail', 'js/signatureForm.js')
       ->addVars('petitionemail', $jsVars);
-
     $form->addButtons(array(
         array(
           'type' => 'next',
@@ -266,8 +258,8 @@ class CRM_Petitionemail_Interface_ElectoralBase extends CRM_Petitionemail_Interf
         'family_name' => $official->getFirstName(),
         'given_name' => $official->getLastName(),
         'ocd_id' => $official->getOcdId(),
-        'greeting' => '',
         'title' => $official->getTitle(),
+        'id' => $official->getExternalIdentifier(),
       ];
     }
     
