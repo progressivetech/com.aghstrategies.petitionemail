@@ -19,20 +19,31 @@ that have an email address.
 When creating or editing a petition, you can expand a section at the bottom of
 the petition form and choose from a list of "Email Recipient Systems".
 
-This extension provides the "Static" system. The [StateLegEmail
-extension](https://github.com/progressivetech/com.aghstrategies.statelegemail),
-if installed, will provide State Legislators, State Upper and State Lower
-(dynamically loading them via the Open States API).
+## Static targets
 
-Next, you can fill out the particulars for your campaign, including the default
-email subject and message, as well as one or more "To" fields indicating the
-contact or contacts that should receive the email.
+This extension provides the "Static" system, allowing you to specify one or
+more targets that will receive an email everytime the petition is signed,
+regardless of the signer's address. The "Static" recipient system is useful
+when targeting a governor, mayor or CEO of a company.
 
 Each target must be a contact in your database (you can configure the target
 with DO NOT EMAIL to avoid accidentally sending them your organizational email
 messages while still enabling them to receive petition email messages). You can
 also choose yourself as a BCC to receive an email everytime someone fills out
 your petition.
+
+## Dynamic targets
+
+The [Electoral
+extension](https://github.com/progressivetech/com.jlacey.electoral) provides a
+means for looking up elected officials based on address using several different
+commercial and non-profit APIS. If the electoral extension is installed,
+petitionemail will allow you to use any of the configured APIs to dynamically
+lookup an elected official based on the address of the petition signer.
+
+## Default message and subject
+
+Lastly, you can indicate a default email subject and message.
 
 When someone fills out the petition, they'll see a text box populated with your
 default message and default subject. If they don't touch it or if they delete
