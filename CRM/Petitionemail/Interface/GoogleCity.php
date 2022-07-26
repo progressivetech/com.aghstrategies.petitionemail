@@ -1,21 +1,21 @@
 <?php
 /**
  * @file
- * Open states class for querying house of reps
+ * Google class for querying city council 
  *
  */
 
 /**
  * @extends CRM_Petitionemail_Interface_ElectoralBase
  */
-class CRM_Petitionemail_Interface_OpenstatesNationalHouse extends CRM_Petitionemail_Interface_ElectoralBase {
+class CRM_Petitionemail_Interface_GoogleCity extends CRM_Petitionemail_Interface_ElectoralBase {
 
   /**
    * The class to use for lookups
    *
    * Should be overridden on the inherited class.
    */
-  protected $electoralLookupClass = '\Civi\Electoral\Api\Openstates';
+  protected $electoralLookupClass = '\Civi\Electoral\Api\GoogleCivicInformation';
 
   /**
    * Include official
@@ -24,7 +24,7 @@ class CRM_Petitionemail_Interface_OpenstatesNationalHouse extends CRM_Petitionem
    * out?
    */
   protected function includeOfficial($official) {
-    if ($official->getChamber() == 'lower' && $official->getLevel() == 'country') {
+    if ($official->getLevel() == 'locality') {
       return TRUE;
     }
     return FALSE;

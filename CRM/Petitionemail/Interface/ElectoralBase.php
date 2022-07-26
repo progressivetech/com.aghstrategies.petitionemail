@@ -115,14 +115,19 @@ class CRM_Petitionemail_Interface_ElectoralBase extends CRM_Petitionemail_Interf
     // Get a list of officials associated with this address.
     $recipients = $this->findRecipients($addressValues);
     // Get the ones the signer chose to send to.
-    $selectedRecipients = $this->getSubmittedValue($form, 'selected_officials');
-    $selectedRecipients = explode(',', $selectedRecipients);
+    $selectedRecipients = $this->getSubmittedValue($form, 'selected-officials');
+    // $selectedRecipients = explode(',', $selectedRecipients);
+    if (!is_array($selectedRecipients)) {
+      $selectedRecipients = [ $selectedRecipients ];
+    }
+    \Civi::log()->debug("selected: " . print_r($selectedRecipients, TRUE));
 
     // Create an array of contact ids to include.
     $extraContactIds = [];
     foreach ($recipients as $recipient) {
-      // Make sure nobody is slipping in any recipients we should not be emailing.
-      if (!in_array($recipient['ocd_id'], $selectedRecipients)) {
+      // Make sure this recipient was selected. 
+      if (!in_array($recipient['id'], $selectedRecipients)) {
+        \Civi::log()->debug("Recipient " . $recipient['ocd_id'] . ' was not selected');
         continue;
       }
 
@@ -139,8 +144,10 @@ class CRM_Petitionemail_Interface_ElectoralBase extends CRM_Petitionemail_Interf
         $title = $recipient['title'];
       }
 
+      \Civi::log()->debug("Adding or retrieving $email $first_name $last_name");
       $extraContactIds[] = $this->addOrRetrieveContact($email, $first_name, $last_name, $middle_name, $title);
     }
+    \Civi::log()->debug("contact ids: " . print_r($extraContactIds, TRUE));
     $this->createPendingActivity($form, $extraContactIds);
     if ($this->sendEmail($form, $extraContactIds))  {
       // If all emails sent successfully complete the activity
@@ -240,14 +247,17 @@ class CRM_Petitionemail_Interface_ElectoralBase extends CRM_Petitionemail_Interf
     ];
     $provider->setAddress($adjustedAddress);
     $response = $provider->lookup();
-    \Civi::log()->debug("response: ". print_r($response, TRUE));
+    // \Civi::log()->debug("response: ". print_r($response, TRUE));
 
+    $return = [];
     foreach ($response['official'] as $official) {
       $email = $official->getEmailAddress();
       if (empty($email)) {
+        \Civi::log()->debug("No email: ". $official->getName());
         continue;
       }
       if (!$this->includeOfficial($official)) {
+        \Civi::log()->debug("don't include: ". $official->getName());
         continue;
 
       }

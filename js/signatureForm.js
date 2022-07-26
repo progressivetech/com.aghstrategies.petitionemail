@@ -60,7 +60,7 @@ CRM.$(function($) {
               type: 'checkbox',
               class: 'crm-form-checkbox',
               value: value.id,
-              name: 'selected-officials',
+              name: 'selected-officials[]',
               id: 'selected-officials-' + value.id
             });
             officialCheckbox.prop('checked', true);

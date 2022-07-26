@@ -252,13 +252,11 @@ function petitionemail_civicrm_fieldOptions($entity, $field, &$options, $params)
             $options['OpenstatesUpper'] = 'Open States: Upper (State)';
             $options['OpenstatesLower'] = 'Open States: Lower (Sttae)';
             $options['OpenstatesBoth'] = 'Open States: Upper and Lower (State)';
-            $options['OpenstatesNationalHouse'] = 'Open States: House of Reps (National)';
           }
           elseif ($name == '\Civi\Electoral\Api\GoogleCivicInformation') {
             $options['GoogleUpper'] = 'Google Civic: Upper (State)';
             $options['GoogleLower'] = 'Google Civic: Lower (Sttae)';
             $options['GoogleBoth'] = 'Google Civic: Upper and Lower (State)';
-            $options['GoogleNationalHouse'] = 'Google Civic: House of Reps (National)';
             $options['GoogleCity'] = 'Google Civic: City Council';
 
           } 
@@ -266,7 +264,6 @@ function petitionemail_civicrm_fieldOptions($entity, $field, &$options, $params)
             $options['CiceroUpper'] = 'Cicero: Upper (State)';
             $options['CiceroLower'] = 'Cicero: Lower (Sttae)';
             $options['CiceroBoth'] = 'Cicero: Upper and Lower (State)';
-            $options['CiceroNationalHouse'] = 'Cicero: House of Reps (National)';
             $options['CiceroCity'] = 'Cicero: City Council';
           }
         }

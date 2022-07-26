@@ -186,9 +186,10 @@ class CRM_Petitionemail_Interface {
    * Generate an activity linking the signer to anyone who got the message.
    */
   protected function createPendingActivity($form, $extraContactIds = []) {
+    $subject = $this->getSubmittedValue($form, 'signer_subject');
     $message = $this->getSenderIdentificationBlock($form) . "\n\n" .
-      $this->getSubmittedValue($form, 'signer_message'); $subject =
-      $this->getSubmittedValue($form, 'signer_subject');
+      '[Official Specific Greeting]' . "\n\n" .
+      $this->getSubmittedValue($form, 'signer_message'); 
 
     // Append the Petition name so email can easily be matched to Petition
     $activitySubject = $subject;
@@ -260,6 +261,10 @@ class CRM_Petitionemail_Interface {
       ->addWhere('contact_id', '=', $contactId)
       ->execute()->first();
 
+    if (!$contact) {
+      \Civi::log()->debug("Failed to find contact with id: $contactId");
+      return '';
+    }
     return $contact['contact_id.display_name'] . "\n" .
       $contact['email'];
   }
@@ -278,12 +283,14 @@ class CRM_Petitionemail_Interface {
 
     // If message is left empty and no default message, don't send anything.
     if (empty($message)) {
-      return;
+      \Civi::log()->debug("Message is empty, not sending.");
+      return FALSE;
     }
 
     // If no contacts, don't send anything.
     if (empty($targets)) {
-      return;
+      \Civi::log()->debug("No targets, not sending.");
+      return FALSE;
     }
 
     // Setup email message:
@@ -345,6 +352,7 @@ class CRM_Petitionemail_Interface {
         return FALSE;
       }
       else {
+        \Civi::log()->debug(E::ts('Message sent successfully to %1', [1 => $mailParams['toName']]));
         CRM_Core_Session::setStatus(E::ts('Message sent successfully to %1', [1 => $mailParams['toName']]));
       }
 

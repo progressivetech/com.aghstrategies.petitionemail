@@ -1,21 +1,21 @@
 <?php
 /**
  * @file
- * Cicero class for querying house of reps
+ * Google class for querying the Lower state officials 
  *
  */
 
 /**
  * @extends CRM_Petitionemail_Interface_ElectoralBase
  */
-class CRM_Petitionemail_Interface_CiceroNationalHouse extends CRM_Petitionemail_Interface_ElectoralBase {
+class CRM_Petitionemail_Interface_GoogleLower extends CRM_Petitionemail_Interface_ElectoralBase {
 
   /**
    * The class to use for lookups
    *
    * Should be overridden on the inherited class.
    */
-  protected $electoralLookupClass = '\Civi\Electoral\Api\Cicero';
+  protected $electoralLookupClass = '\Civi\Electoral\Api\GoogleCivicInformation';
 
   /**
    * Include official
@@ -24,7 +24,7 @@ class CRM_Petitionemail_Interface_CiceroNationalHouse extends CRM_Petitionemail_
    * out?
    */
   protected function includeOfficial($official) {
-    if ($official->getChamber() == 'lower' && $official->getLevel() == 'country') {
+    if ($official->getChamber() == 'lower' && $official->getLevel() == 'administrativeArea1') {
       return TRUE;
     }
     return FALSE;
