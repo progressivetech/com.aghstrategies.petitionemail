@@ -236,9 +236,11 @@ class CRM_Petitionemail_Interface_ElectoralBase extends CRM_Petitionemail_Interf
     }
     $postalCode = str_pad("{$addressValues['Postal_Code_Field']}", 5, "0", STR_PAD_LEFT);
 
-    $limit = 0;
-    $update = FALSE;
-    $provider = new $this->electoralLookupClass($limit, $update);
+    $provider = new $this->electoralLookupClass();
+    // Cache results to avoid hitting the APIs too much.
+    $provider->cache = TRUE;
+    // We are going to be inserting officials - so don't insert them twice.
+    $provider->createOfficialOnDistrictLookup = FALSE;
     $adjustedAddress = [
       'street_address' => $addressValues['Street_Address_Field'],
       'city' => $addressValues['City_Field'],
@@ -246,8 +248,14 @@ class CRM_Petitionemail_Interface_ElectoralBase extends CRM_Petitionemail_Interf
       'postal_code' => $postalCode,
     ];
     $provider->setAddress($adjustedAddress);
+
     $response = $provider->lookup();
-    // \Civi::log()->debug("response: ". print_r($response, TRUE));
+    // Check to see if the electoral API is going to write out their district info
+    // when the address is saved.
+    if (!Civi::settings()->get('electoralApiLookupOnAddressUpdate') ?? FALSE) {
+      // If not, then we will save their district info.
+      $provider->writeData($response);
+    }
 
     $return = [];
     foreach ($response['official'] as $official) {

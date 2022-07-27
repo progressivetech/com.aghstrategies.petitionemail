@@ -232,7 +232,7 @@ function petitionemail_civicrm_fieldOptions($entity, $field, &$options, $params)
       // We only manipulate the options if the electoral extension is
       // installed and is the right version.
       
-      $electoralExt = \Civi\Api4\Extension::get()
+      $electoralExt = \Civi\Api4\Extension::get(FALSE)
         ->addWhere('key', '=', 'com.jlacey.electoral')
         ->addWhere('version', '>=', 3)
         ->addWhere('status', '=', 'installed')
