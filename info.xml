@@ -2,21 +2,24 @@
 <extension key="com.aghstrategies.petitionemail" type="module">
   <file>petitionemail</file>
   <name>CiviCRM Petition Email</name>
-  <description>Email petition signatures to a selected recipient.  Additionally, provide a framework for additional methods for delivering petition signatures.</description>
+  <description>Deliver petition signatures to selected recipients via email. When installed with com.jlacey.electoral, dynamically lookup elected officials based on the signer's postal address.</description>
   <license>AGPL-3.0</license>
   <maintainer>
-    <author>Andrew Hunt</author>
-    <email>andrew@aghstrategies.com</email>
+    <author>Jamie McClelland</author>
+    <email>jamie@progressivetech.org</email>
   </maintainer>
   <urls>
+    <url desc="Main Extension Page">https://github.com/progressivetech/com.aghstrategies.petitionemail</url>
+    <url desc="Support">https://github.com/progressivetech/com.jlacey.aghstrategies.petitionemail</url>
     <url desc="Licensing">http://www.gnu.org/licenses/agpl-3.0.html</url>
   </urls>
   <releaseDate>2022-04-07</releaseDate>
-  <version>2.2-dev</version>
+  <version>2.3-dev</version>
   <develStage>beta</develStage>
   <compatibility>
     <ver>5.45</ver>
   </compatibility>
+  <comments>This module was original developed by Andie Hunt from AGH Strategies.</comment>
   <classloader>
     <psr4 prefix="Civi\" path="Civi"/>
   </classloader>
