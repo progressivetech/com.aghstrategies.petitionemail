@@ -19,7 +19,7 @@
   <compatibility>
     <ver>5.45</ver>
   </compatibility>
-  <comments>This module was original developed by Andie Hunt from AGH Strategies.</comment>
+  <comments>This module was original developed by Andie Hunt from AGH Strategies.</comments>
   <classloader>
     <psr4 prefix="Civi\" path="Civi"/>
   </classloader>
