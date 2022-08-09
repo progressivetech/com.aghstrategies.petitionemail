@@ -81,7 +81,7 @@ CRM.$(function($) {
             $('#signer_subject').prop('disabled', false);
           }
           else {
-            officialsList.html('<div class="messages status no-popup">Failed to locate elected officials that can be contacted based on your address. Your elected officials may not have public email addresses. But you can still sign the petition to register your oppinion.</div>');
+            officialsList.html('<div class="messages status no-popup">Failed to locate elected officials that can be contacted based on your address. Your elected officials may not have public email addresses. But you can still sign the petition to register your opinion.</div>');
             $('#_qf_Signature_next-bottom').html('Sign');
             $('#' + CRM.vars.petitionemail.message).prop('disabled', true);
             $('#signer_subject').prop('disabled', true);
