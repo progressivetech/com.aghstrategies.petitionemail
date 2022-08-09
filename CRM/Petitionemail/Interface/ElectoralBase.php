@@ -248,15 +248,7 @@ class CRM_Petitionemail_Interface_ElectoralBase extends CRM_Petitionemail_Interf
       'postal_code' => $postalCode,
     ];
     $provider->setAddress($adjustedAddress);
-
     $response = $provider->lookup();
-    // Check to see if the electoral API is going to write out their district info
-    // when the address is saved.
-    if (!Civi::settings()->get('electoralApiLookupOnAddressUpdate') ?? FALSE) {
-      // If not, then we will save their district info.
-      $provider->writeData($response);
-    }
-
     $return = [];
     foreach ($response['official'] as $official) {
       $email = $official->getEmailAddress();
