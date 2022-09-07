@@ -141,7 +141,7 @@ function petitionemail_civicrm_buildForm($formName, &$form) {
         }
         // Find the interface for this petition.
         $class = CRM_Petitionemail_Interface::findInterface($surveyId);
-        if ($class === FALSE) {
+        if (!$class) {
           return;
         }
         $interface = new $class($surveyId);

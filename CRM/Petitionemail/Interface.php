@@ -434,9 +434,13 @@ class CRM_Petitionemail_Interface {
       ->addSelect('Letter_To.Recipient_System')
       ->execute()->first();
     if ($result) {
-      return "CRM_Petitionemail_Interface_" . $result['Letter_To.Recipient_System'];
+      $interface = $result['Letter_To.Recipient_System'] ?? NULL;
+      if (!$interface) {
+        return '';
+      }
+      return "CRM_Petitionemail_Interface_" . $interface;
     }
-    return NULL;
+    return '';
   }
 
   /**
