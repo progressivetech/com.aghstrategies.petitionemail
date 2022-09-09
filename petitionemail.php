@@ -168,7 +168,7 @@ function petitionemail_civicrm_postProcess($formName, &$form) {
   switch ($formName) {
     case 'CRM_Campaign_Form_Petition_Signature':
       $class = CRM_Petitionemail_Interface::findInterface($form->petition['id']);
-      if ($class === FALSE) {
+      if (!$class) {
         return;
       }
       $interface = new $class($form->petition['id']);
