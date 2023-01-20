@@ -265,7 +265,7 @@ class CRM_Petitionemail_Interface {
       \Civi::log()->debug("Failed to find contact with id: $contactId");
       return '';
     }
-    return $contact['contact_id.display_name'] . "\n" .
+    return "From:\n" . $contact['contact_id.display_name'] . "\n" .
       $contact['email'];
   }
 
