@@ -308,7 +308,7 @@ class CRM_Petitionemail_Interface {
         foreach($bccEmails as $bcc) {
           $bccHeader[] = CRM_Utils_Mail::formatRFC822Email($bcc['name'], $bcc['email']);
         }
-        $mailParams['headers']['bcc'] = implode(',', $bccHeader);
+        $mailParams['bcc'] = implode(',', $bccHeader);
       }
     }
 
