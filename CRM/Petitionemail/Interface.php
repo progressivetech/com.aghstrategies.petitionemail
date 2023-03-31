@@ -257,7 +257,7 @@ class CRM_Petitionemail_Interface {
     $contact = \Civi\Api4\Email::get(FALSE)
       ->addSelect('contact_id.display_name')
       ->addSelect('email')
-      ->addSelect('is_primary', '=', TRUE)
+      ->addWhere('is_primary', '=', TRUE)
       ->addWhere('contact_id', '=', $contactId)
       ->execute()->first();
 

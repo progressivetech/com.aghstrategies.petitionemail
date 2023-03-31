@@ -171,6 +171,18 @@ function petitionemail_civicrm_postProcess($formName, &$form) {
       if (!$class) {
         return;
       }
+      // Ensure we have a contactId with a name and email.
+      $contact = \Civi\Api4\Email::get(FALSE)
+        ->addSelect('contact_id')
+        ->addWhere('contact_id', '=', $form->_contactId)
+        ->addWhere('contact_id.first_name', 'IS NOT EMPTY')
+        ->addWhere('contact_id.last_name', 'IS NOT EMPTY')
+        ->execute()->first();
+
+      if (!$contact) {
+        \Civi::log()->debug("Failed to find contact with name and email: " . $form->_contactId);
+        return;
+      }
       $interface = new $class($form->petition['id']);
       $interface->processSignature($form);
       break;
