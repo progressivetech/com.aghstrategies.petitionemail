@@ -250,7 +250,7 @@ class CRM_Petitionemail_Interface_ElectoralBase extends CRM_Petitionemail_Interf
     $provider->setAddress($adjustedAddress);
     $response = $provider->lookup();
     $return = [];
-    foreach ($response['official'] as $official) {
+    foreach ($response['official'] ?? [] as $official) {
       $email = $official->getEmailAddress();
       if (empty($email)) {
         \Civi::log()->debug("No email: ". $official->getName());
