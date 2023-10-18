@@ -24,7 +24,7 @@ class CRM_Petitionemail_Interface_CiceroCity extends CRM_Petitionemail_Interface
    * out?
    */
   protected function includeOfficial($official) {
-    if ($official->getLevel() == 'locality') {
+    if ($official['level'] == 'locality') {
       return TRUE;
     }
     return FALSE;

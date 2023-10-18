@@ -25,7 +25,7 @@ class CRM_Petitionemail_Interface_OpenstatesBoth extends CRM_Petitionemail_Inter
    */
   protected function includeOfficial($official) {
     $allowedChambers = [ 'upper', 'lower' ];
-    if (in_array($official->getChamber(), $allowedChambers) && $official->getLevel() == 'administrativeArea1') {
+    if (in_array($official['chamber'], $allowedChambers) && $official['level'] == 'administrativeArea1') {
       return TRUE;
     }
     return FALSE;

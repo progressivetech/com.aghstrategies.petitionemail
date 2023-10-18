@@ -24,7 +24,7 @@ class CRM_Petitionemail_Interface_GoogleLower extends CRM_Petitionemail_Interfac
    * out?
    */
   protected function includeOfficial($official) {
-    if ($official->getChamber() == 'lower' && $official->getLevel() == 'administrativeArea1') {
+    if ($official['chamber'] == 'lower' && $official['level'] == 'administrativeArea1') {
       return TRUE;
     }
     return FALSE;

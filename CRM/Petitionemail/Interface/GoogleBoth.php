@@ -25,7 +25,8 @@ class CRM_Petitionemail_Interface_GoogleBoth extends CRM_Petitionemail_Interface
    */
   protected function includeOfficial($official) {
     $allowedChambers = [ 'upper', 'lower' ];
-    if (in_array($official->getChamber(), $allowedChambers) && $official->getLevel() == 'administrativeArea1') {
+    $chambers = $official['chamber'] ?? NULL;
+    if (in_array($chamber, $allowedChambers) && $official['level'] == 'administrativeArea1') {
       return TRUE;
     }
     return FALSE;

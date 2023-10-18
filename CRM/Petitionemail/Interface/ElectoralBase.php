@@ -239,8 +239,8 @@ class CRM_Petitionemail_Interface_ElectoralBase extends CRM_Petitionemail_Interf
     $provider = new $this->electoralLookupClass();
     // Cache results to avoid hitting the APIs too much.
     $provider->cache = TRUE;
-    // We are going to be inserting officials - so don't insert them twice.
-    $provider->createOfficialOnDistrictLookup = FALSE;
+    $provider->includeOfficials = TRUE;
+    $provider->includeDistricts = FALSE;
     $adjustedAddress = [
       'street_address' => $addressValues['Street_Address_Field'],
       'city' => $addressValues['City_Field'],
@@ -251,25 +251,27 @@ class CRM_Petitionemail_Interface_ElectoralBase extends CRM_Petitionemail_Interf
     $response = $provider->lookup();
     $return = [];
     foreach ($response['official'] ?? [] as $official) {
-      $email = $official->getEmailAddress();
+      $email = $official['email_address'] ?? NULL;
       if (empty($email)) {
-        \Civi::log()->debug("No email: ". $official->getName());
+        \Civi::log()->debug("No email: ". $official['name'] ?? NULL);
         continue;
       }
       if (!$this->includeOfficial($official)) {
-        \Civi::log()->debug("don't include: ". $official->getName());
+        \Civi::log()->debug("don't include: ". $official['name'] ?? NULL);
         continue;
 
       }
       $return[] = [
         'email' => $email,
-        'photourl' => $official->getImageUrl(),
-        'name' => $official->getName(),
-        'family_name' => $official->getLastName(),
-        'given_name' => $official->getFirstName(),
-        'ocd_id' => $official->getOcdId(),
-        'title' => $official->getTitle(),
-        'id' => $official->getExternalIdentifier(),
+        'photourl' => $official['img_url'],
+        'name' => $official['name'],
+        'level' => $official['level'],
+        'chamber' => $official['chamber'],
+        'family_name' => $official['first_name'],
+        'given_name' => $official['last_name'],
+        'ocd_id' => $official['ocd_id'],
+        'title' => $official['title'],
+        'id' => $official['external_id'],
       ];
     }
     

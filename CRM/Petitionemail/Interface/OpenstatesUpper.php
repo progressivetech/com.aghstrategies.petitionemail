@@ -24,7 +24,7 @@ class CRM_Petitionemail_Interface_OpenstatesUpper extends CRM_Petitionemail_Inte
    * out?
    */
   protected function includeOfficial($official) {
-    if ($official->getChamber() == 'upper' && $official->getLevel() == 'administrativeArea1') {
+    if ($official['chamber'] == 'upper' && $official['level'] == 'administrativeArea1') {
       return TRUE;
     }
     return FALSE;
