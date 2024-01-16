@@ -271,7 +271,7 @@ class CRM_Petitionemail_Interface_ElectoralBase extends CRM_Petitionemail_Interf
         'given_name' => $official['last_name'],
         'ocd_id' => $official['ocd_id'],
         'title' => $official['title'],
-        'id' => $official['external_id'],
+        'id' => $official['external_identifier'],
       ];
     }
     
