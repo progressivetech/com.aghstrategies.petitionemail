@@ -313,7 +313,7 @@ class CRM_Petitionemail_Interface {
     }
 
     // Set the sender email as the reply to address.
-    $mailParams['headers']['reply-to'] = \Civi\Api4\Email::get(FALSE)
+    $mailParams['replyTo'] = \Civi\Api4\Email::get(FALSE)
       ->addSelect('email')
       ->addSelect('is_primary', '=', TRUE)
       ->addWhere('contact_id', '=', $form->_contactId)
