@@ -7,7 +7,7 @@ use CRM_Petitionemail_ExtensionUtil as E;
 /**
  * Collection of upgrade steps.
  */
-class CRM_Petitionemail_Upgrader extends CRM_Petitionemail_Upgrader_Base {
+class CRM_Petitionemail_Upgrader extends CRM_Extension_Upgrader_Base {
 
   function upgrade_2000 () {
     // Disable no longer used fields. These should get yanked by the
