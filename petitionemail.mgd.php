@@ -837,7 +837,7 @@ return [
       'version' => 4,
       'match' => ['msg_title'],
       'values' => [
-        'msg_title' => 'Samle Petition Email',
+        'msg_title' => 'Sample Petition Email',
         'msg_subject' => '{petitionemail.subject}',
         'msg_html' => "
 <p>{capture assign=senderIdentificationBlock}{petitionemail.senderIdentificationBlock}{/capture}</p>
